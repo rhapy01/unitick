@@ -1,0 +1,20 @@
+// Re-export types from validation schemas for backward compatibility
+export type {
+  UserRole,
+  ServiceType,
+  BookingStatus,
+  Profile,
+  Vendor,
+  Listing,
+  Booking,
+  Order,
+  CartItem,
+  SignupForm,
+  LoginForm,
+  WalletUpdateForm,
+  ListingForm,
+  VendorSetupForm,
+  SearchQuery,
+  ApiResponse,
+  Pagination,
+} from "./validation-schemas"

@@ -1,0 +1,28 @@
+# Supabase Cron Configuration
+# This file defines scheduled tasks for your Supabase project
+
+# Daily sync and expiration job (runs at 2 AM UTC)
+- name: "daily-sync-and-expire"
+  schedule: "0 2 * * *"
+  function: "cron-sync"
+  description: "Daily contract sync and listing expiration"
+
+# Optional: More frequent sync (every 6 hours)
+- name: "frequent-sync"
+  schedule: "0 */6 * * *"
+  function: "sync-contract-events"
+  description: "Frequent contract event sync"
+
+
+
+
+
+
+
+
+
+
+
+
+
+

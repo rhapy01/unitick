@@ -1,0 +1,33 @@
+name: Expire Listings Cron
+
+on:
+  schedule:
+    # Runs daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Expire Listings Function
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "🔄 Running daily listing expiration..."
+          
+          # Call the cron-sync function which includes listing expiration
+          response=$(curl -s -X POST "${SUPABASE_URL}/functions/v1/cron-sync" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+          
+          echo "📊 Response: $response"
+          
+          # Check if the response contains success
+          if echo "$response" | grep -q '"success":true'; then
+            echo "✅ Cron job completed successfully"
+          else
+            echo "❌ Cron job failed"
+            exit 1
+          fi

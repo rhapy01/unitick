@@ -1,0 +1,1132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Line clamp utilities for better text truncation */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+:root,
+.dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0a0a0a;
+  --card-foreground: #ffffff;
+  --popover: #0a0a0a;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #18181b;
+  --secondary-foreground: #ffffff;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #3b82f6;
+  --chart-1: #f97316;
+  --chart-2: #06b6d4;
+  --chart-3: #8b5cf6;
+  --chart-4: #eab308;
+  --chart-5: #ec4899;
+  --radius: 0.5rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  /* Icon colors for better visibility - using brighter colors for dark theme */
+  --icon-primary: #60a5fa;
+  --icon-secondary: #ffffff;
+  --icon-muted: #d1d5db;
+}
+
+
+/* Gradient Theme - Black background, White primary, Pink accent only */
+html.gradient {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: rgba(0, 0, 0, 0.8);
+  --card-foreground: #ffffff;
+  --popover: rgba(0, 0, 0, 0.9);
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: rgba(255, 255, 255, 0.1);
+  --secondary-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: #b3b3b3; /* Changed from #ffffff to better contrast */
+  --accent: #E4405F;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.05);
+  --ring: #E4405F;
+  --chart-1: #E4405F;
+  --chart-2: #E4405F;
+  --chart-3: #E4405F;
+  --chart-4: #E4405F;
+  --chart-5: #E4405F;
+  --sidebar: rgba(0, 0, 0, 0.9);
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #E4405F;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #E4405F;
+  /* Icon colors for gradient theme */
+  --icon-primary: #E4405F;
+  --icon-secondary: #ffffff;
+  --icon-muted: #b3b3b3; /* Changed from #ffffff to better contrast */
+}
+
+/* Gradient Background Effects */
+html.gradient body {
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(228, 64, 95, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(245, 96, 64, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(252, 204, 99, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 60% 60%, rgba(131, 58, 180, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(64, 93, 230, 0.1) 0%, transparent 50%),
+    #000000;
+  background-attachment: fixed;
+}
+
+/* Gradient Utilities */
+html.gradient .gradient-flow {
+  background: linear-gradient(45deg, #E4405F, #F56040, #FCCC63, #833AB4, #405DE6);
+  background-size: 400% 400%;
+  animation: gradientFlow 6s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+html.gradient .gradient-flow::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, #E4405F, #F56040, #FCCC63, #833AB4, #405DE6);
+  background-size: 400% 400%;
+  animation: gradientFlow 6s ease-in-out infinite reverse;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+}
+
+html.gradient .gradient-text {
+  background: linear-gradient(45deg, #E4405F, #F56040, #FCCC63, #833AB4, #405DE6);
+  background-size: 400% 400%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientFlow 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(228, 64, 95, 0.3));
+}
+
+html.gradient .gradient-border {
+  position: relative;
+  background: linear-gradient(45deg, #E4405F, #F56040, #FCCC63, #833AB4, #405DE6);
+  background-size: 400% 400%;
+  animation: gradientFlow 6s ease-in-out infinite;
+  padding: 2px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(228, 64, 95, 0.2);
+}
+
+html.gradient .gradient-border > * {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+}
+
+html.gradient .gradient-subtle {
+  background: linear-gradient(135deg, 
+    rgba(228, 64, 95, 0.08) 0%, 
+    rgba(245, 96, 64, 0.08) 25%, 
+    rgba(252, 204, 99, 0.05) 50%, 
+    rgba(131, 58, 180, 0.08) 75%, 
+    rgba(64, 93, 230, 0.08) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.gradient .gradient-accent {
+  background: linear-gradient(135deg, #E4405F, #F56040);
+  box-shadow: 0 4px 15px rgba(228, 64, 95, 0.4);
+  transition: all 0.3s ease;
+}
+
+html.gradient .gradient-accent:hover {
+  box-shadow: 0 6px 25px rgba(228, 64, 95, 0.6);
+  transform: translateY(-2px);
+}
+
+html.gradient .gradient-primary {
+  background: linear-gradient(135deg, #833AB4, #E4405F);
+  box-shadow: 0 4px 15px rgba(131, 58, 180, 0.4);
+}
+
+html.gradient .gradient-secondary {
+  background: linear-gradient(135deg, #405DE6, #833AB4);
+  box-shadow: 0 4px 15px rgba(64, 93, 230, 0.4);
+}
+
+html.gradient .gradient-glow {
+  box-shadow: 
+    0 0 20px rgba(228, 64, 95, 0.3),
+    0 0 40px rgba(245, 96, 64, 0.2),
+    0 0 60px rgba(252, 204, 99, 0.1);
+}
+
+html.gradient .gradient-card {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+html.gradient .gradient-button {
+  background: linear-gradient(135deg, #E4405F, #F56040);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 
+    0 4px 15px rgba(228, 64, 95, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+html.gradient .gradient-button:hover {
+  background: linear-gradient(135deg, #F56040, #E4405F);
+  box-shadow: 
+    0 6px 25px rgba(228, 64, 95, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+html.gradient .gradient-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+html.gradient .gradient-input:focus {
+  border-color: #E4405F;
+  box-shadow: 0 0 0 3px rgba(228, 64, 95, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes gradientFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+}
+
+@keyframes gradientPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+html.gradient .gradient-pulse {
+  animation: gradientPulse 2s ease-in-out infinite;
+}
+
+/* Interactive animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Interactive utility classes */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.6s ease-out;
+}
+
+.animate-fade-scale {
+  animation: fadeInScale 0.5s ease-out;
+}
+
+/* Hover effects for better interactivity */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Interactive text effects */
+.text-interactive {
+  transition: all 0.3s ease;
+}
+
+/* Modern How It Works enhancements */
+.how-it-works-step {
+  position: relative;
+  overflow: hidden;
+}
+
+.how-it-works-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.how-it-works-step:hover::before {
+  left: 100%;
+}
+
+/* Gradient flow lines */
+.gradient-flow-line {
+  background: linear-gradient(90deg, var(--accent), transparent, var(--accent));
+  background-size: 200% 100%;
+  animation: flowLine 3s ease-in-out infinite;
+}
+
+@keyframes flowLine {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Step number glow effect */
+.step-number-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.step-number-glow:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+}
+
+/* Modern card hover effects */
+.modern-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure SVG icons in How It Works are visible */
+.how-it-works-step svg {
+  fill: currentColor;
+  stroke: currentColor;
+  color: white;
+}
+
+.how-it-works-step svg:hover {
+  color: white;
+}
+
+/* Step circle enhancements */
+.step-circle {
+  background: linear-gradient(135deg, var(--accent), var(--accent) / 0.8);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Enhanced How It Works interactivity */
+@keyframes stepGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes stepPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes lineFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Interactive step animations */
+.step-interactive {
+  animation: stepGlow 3s ease-in-out infinite;
+}
+
+.step-interactive:hover {
+  animation: stepPulse 0.6s ease-in-out;
+}
+
+.step-icon-float {
+  animation: iconFloat 2s ease-in-out infinite;
+}
+
+.step-icon-float:hover {
+  animation: none;
+}
+
+/* Flow line animations */
+.flow-line {
+  background: linear-gradient(90deg, var(--accent), transparent, var(--accent));
+  background-size: 200% 100%;
+  animation: lineFlow 3s ease-in-out infinite;
+}
+
+.flow-line:hover {
+  animation-duration: 1s;
+}
+
+/* Step progress indicators */
+.step-progress {
+  position: relative;
+  overflow: hidden;
+}
+
+.step-progress::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.8s ease;
+}
+
+.step-progress:hover::before {
+  left: 100%;
+}
+
+/* Enhanced hover states */
+.step-enhanced:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.step-enhanced:hover .step-icon {
+  animation: iconFloat 0.6s ease-in-out;
+}
+
+/* Mobile-specific animations */
+@media (max-width: 768px) {
+  .step-mobile:hover {
+    transform: translateX(5px);
+  }
+  
+  .step-mobile:hover .step-icon {
+    animation: iconFloat 0.4s ease-in-out;
+  }
+}
+
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+    outline-color: hsl(var(--ring) / 0.5);
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  /* Icon styling utilities */
+  .icon-primary {
+    color: var(--icon-primary);
+  }
+  
+  .icon-secondary {
+    color: var(--icon-secondary);
+  }
+  
+  .icon-muted {
+    color: var(--icon-muted);
+  }
+  
+  /* Ensure SVG icons are visible */
+  svg {
+    fill: currentColor;
+    stroke: currentColor;
+  }
+  
+  /* Ensure Lucide icons are visible */
+  [data-lucide] {
+    color: currentColor;
+  }
+  
+  /* Fix any invisible icons */
+  svg:not([fill]):not([stroke]) {
+    fill: currentColor;
+    stroke: currentColor;
+  }
+  
+  /* Theme-specific icon adjustments */
+  html.gradient svg {
+    color: var(--icon-secondary);
+  }
+  
+  html.gradient .icon-primary {
+    color: var(--icon-primary);
+  }
+  
+  /* Dark theme icon adjustments for better visibility */
+  .dark svg {
+    color: var(--icon-secondary);
+  }
+  
+  .dark .icon-primary {
+    color: var(--icon-primary);
+  }
+  
+  .dark .text-accent {
+    color: var(--icon-primary) !important;
+  }
+  
+  /* Fix gradient theme icon colors */
+  html.gradient .text-green-600,
+  html.gradient .text-green-500,
+  html.gradient .text-green-400 {
+    color: #10b981 !important;
+  }
+  
+  html.gradient .text-yellow-500,
+  html.gradient .text-yellow-400 {
+    color: #f59e0b !important;
+  }
+  
+  html.gradient .text-red-500,
+  html.gradient .text-red-400 {
+    color: #ef4444 !important;
+  }
+  
+  html.gradient .text-orange-600,
+  html.gradient .text-orange-400 {
+    color: #f97316 !important;
+  }
+  
+  html.gradient .text-blue-500,
+  html.gradient .text-blue-400 {
+    color: #3b82f6 !important;
+  }
+  
+  html.gradient .text-pink-500,
+  html.gradient .text-pink-400 {
+    color: #E4405F !important;
+  }
+  
+  html.gradient .text-amber-500,
+  html.gradient .text-amber-400 {
+    color: #f59e0b !important;
+  }
+  
+  html.gradient .text-muted-foreground {
+    color: var(--icon-muted) !important;
+  }
+  
+  html.gradient .text-primary {
+    color: var(--icon-primary) !important;
+  }
+  
+  /* Additional gradient theme readability improvements */
+  html.gradient .text-secondary {
+    color: #d1d5db !important;
+  }
+  
+  html.gradient .text-destructive {
+    color: #fca5a5 !important;
+  }
+  
+  html.gradient .text-success {
+    color: #86efac !important;
+  }
+  
+  html.gradient .text-warning {
+    color: #fde047 !important;
+  }
+  
+  html.gradient .text-info {
+    color: #93c5fd !important;
+  }
+  
+  /* Gradient theme card improvements */
+  html.gradient .card {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  html.gradient .card-header {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  html.gradient .card-title {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .card-description {
+    color: #b3b3b3 !important;
+  }
+  
+  /* Gradient theme input improvements */
+  html.gradient .input {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .input:focus {
+    border-color: #E4405F !important;
+    box-shadow: 0 0 0 2px rgba(228, 64, 95, 0.2) !important;
+  }
+  
+  html.gradient .input::placeholder {
+    color: #6b7280 !important;
+  }
+  
+  /* Gradient theme button improvements */
+  html.gradient .btn-outline {
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+  
+  html.gradient .btn-outline:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+  
+  /* Gradient theme alert improvements */
+  html.gradient .alert {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .alert-destructive {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+  }
+  
+  html.gradient .alert-success {
+    background-color: rgba(34, 197, 94, 0.1) !important;
+    border-color: rgba(34, 197, 94, 0.2) !important;
+    color: #86efac !important;
+  }
+  
+  html.gradient .alert-warning {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    border-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fde047 !important;
+  }
+  
+  html.gradient .alert-info {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
+    color: #93c5fd !important;
+  }
+  
+  /* Gradient theme badge improvements */
+  html.gradient .badge {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge-primary {
+    background-color: #E4405F !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge-secondary {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge-success {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    color: #86efac !important;
+  }
+  
+  html.gradient .badge-warning {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fde047 !important;
+  }
+  
+  /* Gradient theme badge improvements */
+  html.gradient .badge {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge-primary {
+    background-color: #E4405F !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge-secondary {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge-success {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    color: #86efac !important;
+  }
+  
+  html.gradient .badge-warning {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fde047 !important;
+  }
+  
+  html.gradient .badge-destructive {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #fca5a5 !important;
+  }
+  
+  /* Gradient theme wallet balance cards */
+  html.gradient .bg-blue-50 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .bg-green-50 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-blue-900,
+  html.gradient .text-blue-100 {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-green-900,
+  html.gradient .text-green-100 {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-blue-700,
+  html.gradient .text-blue-300 {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-green-700,
+  html.gradient .text-green-300 {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-blue-600 {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-green-600 {
+    color: #ffffff !important;
+  }
+  
+  /* Gradient theme status badges */
+  html.gradient .bg-green-100 {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    color: #86efac !important;
+  }
+  
+  html.gradient .text-green-800 {
+    color: #86efac !important;
+  }
+  
+  html.gradient .bg-yellow-100 {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fde047 !important;
+  }
+  
+  html.gradient .text-yellow-800 {
+    color: #fde047 !important;
+  }
+  
+  html.gradient .text-red-600 {
+    color: #fca5a5 !important;
+  }
+  
+  html.gradient .text-green-500 {
+    color: #86efac !important;
+  }
+  
+  html.gradient .text-red-500 {
+    color: #fca5a5 !important;
+  }
+  
+  /* Fix specific unreadable text elements in gradient theme */
+  html.gradient p,
+  html.gradient .text-sm,
+  html.gradient .text-base,
+  html.gradient .text-lg,
+  html.gradient .text-xl,
+  html.gradient .text-2xl,
+  html.gradient .text-3xl {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-gray-500,
+  html.gradient .text-gray-400,
+  html.gradient .text-gray-300,
+  html.gradient .text-gray-200 {
+    color: #b3b3b3 !important;
+  }
+  
+  html.gradient .text-gray-600,
+  html.gradient .text-gray-700,
+  html.gradient .text-gray-800,
+  html.gradient .text-gray-900 {
+    color: #d1d5db !important;
+  }
+  
+  /* Fix wallet status and balance text */
+  html.gradient .wallet-balance,
+  html.gradient .balance-text,
+  html.gradient .status-text {
+    color: #ffffff !important;
+  }
+  
+  /* Fix description and secondary text */
+  html.gradient .description,
+  html.gradient .text-description,
+  html.gradient .secondary-text {
+    color: #b3b3b3 !important;
+  }
+  
+  /* Fix list items and bullet points */
+  html.gradient li,
+  html.gradient ul li,
+  html.gradient ol li {
+    color: #ffffff !important;
+  }
+  
+  /* Fix headings */
+  html.gradient h1,
+  html.gradient h2,
+  html.gradient h3,
+  html.gradient h4,
+  html.gradient h5,
+  html.gradient h6 {
+    color: #ffffff !important;
+  }
+  
+  /* Fix spans and inline elements */
+  html.gradient span:not(.text-muted-foreground) {
+    color: #ffffff !important;
+  }
+  
+  /* Fix divs with text content */
+  html.gradient div:not(.text-muted-foreground) {
+    color: #ffffff !important;
+  }
+  
+  /* Force all text to be white in gradient theme */
+  html.gradient * {
+    color: #ffffff !important;
+  }
+  
+  /* Override muted text specifically */
+  html.gradient .text-muted-foreground,
+  html.gradient [class*="text-muted"],
+  html.gradient [class*="muted"] {
+    color: #b3b3b3 !important;
+  }
+  
+  /* Ensure all text elements have proper contrast */
+  html.gradient .text-white {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .text-black {
+    color: #ffffff !important;
+  }
+  
+  /* Fix specific component text */
+  html.gradient .card-content p,
+  html.gradient .card-content div,
+  html.gradient .card-content span {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .alert-description,
+  html.gradient .alert-content {
+    color: #ffffff !important;
+  }
+  
+  /* Fill colors for gradient theme */
+  html.gradient .fill-yellow-500,
+  html.gradient .fill-yellow-400 {
+    fill: #f59e0b !important;
+  }
+  
+  html.gradient .fill-green-500,
+  html.gradient .fill-green-400 {
+    fill: #10b981 !important;
+  }
+  
+  /* Dark theme specific color fixes for better contrast */
+  .dark .text-blue-500,
+  .dark .text-blue-400 {
+    color: #60a5fa !important;
+  }
+  
+  .dark .text-green-600,
+  .dark .text-green-500,
+  .dark .text-green-400 {
+    color: #34d399 !important;
+  }
+  
+  .dark .text-yellow-500,
+  .dark .text-yellow-400 {
+    color: #fbbf24 !important;
+  }
+  
+  .dark .text-red-500,
+  .dark .text-red-400 {
+    color: #f87171 !important;
+  }
+  
+  .dark .text-orange-600,
+  .dark .text-orange-400 {
+    color: #fb923c !important;
+  }
+  
+  .dark .text-pink-500,
+  .dark .text-pink-400 {
+    color: #f472b6 !important;
+  }
+  
+  .dark .text-amber-500,
+  .dark .text-amber-400 {
+    color: #fbbf24 !important;
+  }
+  
+  .dark .text-muted-foreground {
+    color: var(--icon-muted) !important;
+  }
+  
+  .dark .text-primary {
+    color: var(--icon-primary) !important;
+  }
+  
+  /* Fill colors for dark theme */
+  .dark .fill-yellow-500,
+  .dark .fill-yellow-400 {
+    fill: #fbbf24 !important;
+  }
+  
+  .dark .fill-green-500,
+  .dark .fill-green-400 {
+    fill: #34d399 !important;
+  }
+  
+  /* Button styling improvements */
+  .btn-outline {
+    background: transparent !important;
+    border: 1px solid var(--border);
+    color: var(--foreground);
+  }
+  
+  .btn-outline:hover {
+    background: var(--muted) !important;
+    color: var(--foreground);
+  }
+  
+  /* Ensure outline buttons don't inherit accent colors */
+  button[class*="border"]:not([class*="bg-accent"]) {
+    background: transparent !important;
+  }
+  
+  button[class*="border"]:not([class*="bg-accent"]):hover {
+    background: var(--muted) !important;
+  }
+  
+  /* More specific targeting for outline buttons */
+  .border-border {
+    background: transparent !important;
+  }
+  
+  .border-border:hover {
+    background: var(--muted) !important;
+  }
+}
+
+/* Print styles for paper tickets */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .paper-ticket, .paper-ticket * {
+    visibility: visible;
+  }
+  
+  .paper-ticket {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
