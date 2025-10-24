@@ -9,6 +9,21 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ListingManagement } from "@/components/listing-management"
+import { 
+  ShieldCheck, 
+  CheckCircle2, 
+  Plus, 
+  Package, 
+  DollarSign, 
+  TrendingUp, 
+  Award, 
+  Star, 
+  Heart, 
+  MessageSquare,
+  Wallet,
+  AlertTriangle,
+  Clock
+} from "lucide-react"
 
 interface VendorStats {
   vendorId: string
@@ -19,6 +34,8 @@ interface VendorStats {
   averageRating: number
   totalReviews: number
   totalLikes: number
+  walletAddress: string
+  isWhitelisted: boolean
   recentBookings: Array<{
     id: string
     listing_title: string
@@ -71,7 +88,7 @@ export default function VendorDashboardPage() {
 
         const { data: vendorData } = await supabase
           .from("vendors")
-          .select("id, verification_status, average_rating, review_count, like_count")
+          .select("id, verification_status, average_rating, review_count, like_count, wallet_address")
           .eq("user_id", user.id)
           .single()
 
@@ -82,6 +99,25 @@ export default function VendorDashboardPage() {
 
         const vendorId = vendorData.id
         setVerificationStatus(vendorData.verification_status || "none")
+
+        // Check whitelist status
+        let isWhitelisted = false
+        if (vendorData.wallet_address) {
+          try {
+            const response = await fetch('/api/admin/vendor-whitelist', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                action: 'check', 
+                address: vendorData.wallet_address 
+              })
+            })
+            const result = await response.json()
+            isWhitelisted = result.success && result.isWhitelisted
+          } catch (error) {
+            console.error('Error checking whitelist status:', error)
+          }
+        }
 
         const { count: totalBookings } = await supabase
           .from("bookings")
@@ -170,6 +206,8 @@ export default function VendorDashboardPage() {
           averageRating: vendorData.average_rating || 0,
           totalReviews: vendorData.review_count || 0,
           totalLikes: vendorData.like_count || 0,
+          walletAddress: vendorData.wallet_address || '',
+          isWhitelisted,
           recentBookings,
           topListings: topListings.slice(0, 5),
           badges,
@@ -247,6 +285,24 @@ export default function VendorDashboardPage() {
             <p className="text-muted-foreground">Manage your listings and track performance</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {/* Whitelist Status */}
+            {stats && (
+              <>
+                {stats.isWhitelisted ? (
+                  <Badge variant="default" className="px-4 py-2 bg-green-100 text-green-800 border-green-200">
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Wallet Whitelisted
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="px-4 py-2">
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Wallet Not Whitelisted
+                  </Badge>
+                )}
+              </>
+            )}
+            
+            {/* Verification Status */}
             {verificationStatus === "none" && (
               <Button variant="outline" onClick={handleApplyForVerification}>
                 <ShieldCheck className="mr-2 h-4 w-4" />
@@ -255,6 +311,7 @@ export default function VendorDashboardPage() {
             )}
             {verificationStatus === "pending" && (
               <Badge variant="secondary" className="px-4 py-2">
+                <Clock className="mr-2 h-4 w-4" />
                 Verification Pending
               </Badge>
             )}
@@ -347,6 +404,88 @@ export default function VendorDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Whitelist Status Card */}
+        {stats && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-5 w-5" />
+                Payment Wallet Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${stats.isWhitelisted ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <div>
+                      <p className="font-medium">
+                        {stats.isWhitelisted ? 'Wallet Whitelisted' : 'Wallet Not Whitelisted'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {stats.walletAddress ? `${stats.walletAddress.slice(0, 6)}...${stats.walletAddress.slice(-4)}` : 'No wallet address'}
+                      </p>
+                    </div>
+                  </div>
+                  {stats.isWhitelisted ? (
+                    <Badge variant="default" className="bg-green-100 text-green-800">
+                      <CheckCircle2 className="mr-1 h-3 w-3" />
+                      Ready to Receive Payments
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive">
+                      <AlertTriangle className="mr-1 h-3 w-3" />
+                      Cannot Receive Payments
+                    </Badge>
+                  )}
+                </div>
+                
+                {!stats.isWhitelisted && (
+                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-3 flex-1">
+                        <div>
+                          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                            Action Required: Wallet Whitelist
+                          </p>
+                          <div className="text-xs text-amber-700 dark:text-amber-300 space-y-1 mt-2">
+                            <p>• Your wallet address must be whitelisted before you can receive payments</p>
+                            <p>• Only whitelisted addresses can receive funds through our smart contract</p>
+                            <p>• Complete the whitelist application form to get approved</p>
+                            <p>• You'll receive an email notification once whitelisted</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                            <a 
+                              href="https://formspree.io/f/xrgnzlog" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1"
+                            >
+                              <Wallet className="h-3 w-3" />
+                              Apply for Whitelist
+                            </a>
+                          </Button>
+                          <Button asChild size="sm" variant="outline">
+                            <a 
+                              href="/vendor/setup" 
+                              className="inline-flex items-center gap-1"
+                            >
+                              Update Profile
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Listing Management Section */}
         {stats && (

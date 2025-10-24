@@ -13,6 +13,14 @@ UniTick is a revolutionary blockchain-based ticketing platform that solves the c
 - **Internal Wallet System**: Secure, encrypted wallet management
 - **Gift Tickets**: Send tickets as gifts with recipient information
 
+### Vendor Requirements
+- **External Wallet Recommended**: Use MetaMask, Trust Wallet, etc. for receiving payments
+- **Wallet Whitelist**: All vendor wallet addresses must be whitelisted to receive payments
+- **Business Verification**: Vendors must complete verification process
+- **Formspree Application**: Submit whitelist application form with business details
+- **Smart Contract Compliance**: Only whitelisted addresses can receive funds
+- **Status Tracking**: Real-time whitelist status monitoring
+
 ### Technical Features
 - **Blockchain Integration**: Ethereum-based smart contracts
 - **NFT Tickets**: Unique, verifiable digital tickets
@@ -21,6 +29,7 @@ UniTick is a revolutionary blockchain-based ticketing platform that solves the c
 - **PDF Tickets**: Professional downloadable tickets
 - **Vendor Dashboard**: Complete management interface
 - **Admin Panel**: Platform administration tools
+- **Vendor Whitelist System**: Secure payment address management
 
 ## 🏗️ Architecture
 

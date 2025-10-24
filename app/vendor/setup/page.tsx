@@ -369,10 +369,51 @@ export default function VendorSetupPage() {
                       required
                     />
                   </div>
+                  
+                  {/* External Wallet Encouragement */}
+                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-800/50 rounded-lg p-4 mt-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Wallet className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-200">
+                          💡 Recommended: Use External Wallet
+                        </p>
+                        <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                          <p>• <strong>External wallets</strong> (MetaMask, Trust Wallet, etc.) are recommended for receiving payments</p>
+                          <p>• You have full control and can easily manage your funds</p>
+                          <p>• Better security and flexibility for business operations</p>
+                          <p>• You can also create an in-app wallet for platform features</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Whitelist Information */}
+                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/50 rounded-lg p-4 mt-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Wallet className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                          ⚠️ Important: Wallet Whitelist Required
+                        </p>
+                        <div className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
+                          <p>• This wallet address must be <strong>whitelisted</strong> before you can receive payments</p>
+                          <p>• Only whitelisted addresses can receive funds through our smart contract</p>
+                          <p>• Complete the whitelist application form after profile setup</p>
+                          <p>• You'll receive an email notification once whitelisted</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/50 rounded-lg p-3 mt-2">
                     <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
                       <Wallet className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-                      <span>This is where you&apos;ll receive payments from customers. Make sure you have access to this wallet.</span>
+                      <span>Make sure you have full access to this wallet - you'll need it to receive payments and manage your business.</span>
                     </p>
                   </div>
                 </div>
@@ -418,6 +459,59 @@ export default function VendorSetupPage() {
               </Button>
             </div>
           </form>
+
+          {/* Whitelist Application Section */}
+          <Card className="mt-8 border-blue-200/50 bg-blue-50/50 dark:bg-blue-950/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                <Wallet className="h-5 w-5" />
+                Next Step: Apply for Wallet Whitelist
+              </CardTitle>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                After creating your profile, you need to apply for wallet whitelist to receive payments
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border">
+                <h4 className="font-semibold mb-3 text-gray-800 dark:text-gray-200">Whitelist Application Requirements:</h4>
+                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>Complete vendor profile (business name, description, contact details)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>Provide external wallet address for receiving payments</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>Create in-app wallet for platform features</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>Submit whitelist application form with both wallet addresses</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <a 
+                    href="https://formspree.io/f/xrgnzlog" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Apply for Wallet Whitelist
+                  </a>
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Opens whitelist application form in new tab
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Info Footer */}
           <div className="mt-8 text-center">

@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter, usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
+import { ThemeLogo } from "@/components/theme-logo"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ShoppingCart, UserIcon, LogOut, LayoutDashboard, Award, Menu, Store, Settings } from "lucide-react"
+import { ShoppingCart, UserIcon, LogOut, LayoutDashboard, Award, Menu, Store, Settings, X, FileText, Home, UserCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { NotificationBell } from "@/components/notifications/notification-bell"
@@ -110,7 +112,15 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-4 md:gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <div className="text-xl font-bold gradient-text">UniTick</div>
+            <ThemeLogo 
+              width={32} 
+              height={32}
+              className="h-8 w-8"
+              alt="UniTick Logo"
+            />
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+              BETA
+            </Badge>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/shop" className="text-sm hover:text-primary transition-colors">
@@ -118,6 +128,9 @@ export function Header() {
             </Link>
             <Link href="/vendors" className="text-sm hover:text-primary transition-colors">
               Browse Vendors
+            </Link>
+            <Link href="/docs" className="text-sm hover:text-primary transition-colors">
+              Docs
             </Link>
           </nav>
         </div>
@@ -190,88 +203,137 @@ export function Header() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4 mt-8">
-                {unilaMiles > 0 && (
-                  <Badge variant="secondary" className="w-full justify-center py-2">
-                    <Award className="mr-2 h-4 w-4" />
-                    {unilaMiles} Unila Miles
-                  </Badge>
-                )}
-                <Link
-                  href="/shop"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Browse Services
-                </Link>
-                <Link
-                  href="/vendors"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Store className="h-5 w-5" />
-                  Browse Vendors
-                </Link>
-
-                {/* Theme Switcher - Mobile */}
-                <div className="flex items-center gap-2 px-4 py-2 md:hidden">
-                  <ThemeSwitcher />
-                  <span className="text-sm">Theme</span>
+            <SheetContent side="right" className="w-[280px] bg-black border-gray-800 p-0">
+              <div className="flex flex-col h-full">
+                {/* Compact Header */}
+                <div className="px-4 py-4 border-b border-gray-800">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ThemeLogo 
+                      width={24} 
+                      height={24}
+                      className="h-6 w-6"
+                      alt="UniTick"
+                    />
+                    <span className="font-semibold text-sm">UniTick</span>
+                  </div>
+                  {user && (
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  )}
                 </div>
 
-                {/* Settings - Mobile only */}
-                <Link
-                  href="/vendor/settings"
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg md:hidden"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Settings className="h-5 w-5" />
-                  Settings
-                </Link>
+                {/* Compact Navigation */}
+                <nav className="flex-1 overflow-y-auto py-2">
+                  {user && (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">Dashboard</span>
+                      </Link>
+                      <Link
+                        href="/cart"
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <ShoppingCart className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm">Cart</span>
+                        {cartCount > 0 && (
+                          <Badge variant="secondary" className="ml-auto text-xs">
+                            {cartCount}
+                          </Badge>
+                        )}
+                      </Link>
+                      {unilaMiles > 0 && (
+                        <div className="flex items-center gap-3 px-4 py-2">
+                          <Award className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-400">{unilaMiles} Miles</span>
+                        </div>
+                      )}
+                      <div className="border-t border-gray-800 my-2"></div>
+                    </>
+                  )}
+                  
+                  <Link
+                    href="/"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Home className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">Home</span>
+                  </Link>
+                  <Link
+                    href="/shop"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Store className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">Browse Services</span>
+                  </Link>
+                  <Link
+                    href="/vendors"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <UserCircle className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">Browse Vendors</span>
+                  </Link>
+                  <Link
+                    href="/docs"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <FileText className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm">Docs</span>
+                  </Link>
+                  
+                  <div className="border-t border-gray-800 my-2"></div>
+                  
+                  <div className="flex items-center gap-3 px-4 py-2">
+                    <Settings className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm flex-1">Theme</span>
+                    <ThemeSwitcher />
+                  </div>
 
-                {user ? (
-                  <>
-                    <Link
-                      href="/dashboard"
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <LayoutDashboard className="h-5 w-5" />
-                      Dashboard
-                    </Link>
-                
-                    <button
-                      onClick={() => {
-                        handleSignOut()
-                        setMobileMenuOpen(false)
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg text-left"
-                    >
-                      <LogOut className="h-5 w-5" />
-                      Sign out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/auth/login"
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/auth/signup"
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-accent rounded-lg"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Sign up
-                    </Link>
-                  </>
-                )}
-              </nav>
+                  {user && (
+                    <>
+                      <div className="border-t border-gray-800 my-2"></div>
+                      <button
+                        onClick={() => {
+                          handleSignOut()
+                          setMobileMenuOpen(false)
+                        }}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-900 transition-colors w-full text-left text-red-400"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span className="text-sm">Sign out</span>
+                      </button>
+                    </>
+                  )}
+                  
+                  {!user && (
+                    <>
+                      <div className="border-t border-gray-800 my-2"></div>
+                      <Link
+                        href="/auth/login"
+                        className="flex items-center justify-center px-4 py-2 mb-2 hover:bg-gray-900 transition-colors text-sm"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        href="/auth/signup"
+                        className="flex items-center justify-center px-4 py-2 bg-white text-black hover:bg-gray-100 transition-colors text-sm font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign up
+                      </Link>
+                    </>
+                  )}
+                </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
