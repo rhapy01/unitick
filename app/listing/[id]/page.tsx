@@ -154,7 +154,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
                         className={`w-2 h-2 rounded-full transition-colors ${
-                          index === currentImageIndex ? "bg-white" : "bg-white/50"
+                          index === currentImageIndex ? "bg-primary" : "bg-primary/50"
                         }`}
                       />
                     ))}
@@ -168,7 +168,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 <div>
                   <h1 className="text-3xl font-bold mb-2">{sanitizeUserInput(listing.title)}</h1>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
                     <span>{sanitizeUserInput(listing.location)}</span>
                   </div>
                 </div>
@@ -218,7 +218,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
               {listing.capacity && (
                 <div className="mt-6 flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-5 w-5" />
+                  <Users className="h-5 w-5 text-muted-foreground" />
                   <span>Capacity: {sanitizeQuantity(listing.capacity)} people</span>
                 </div>
               )}
@@ -249,7 +249,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                   {listing.available_dates && listing.available_dates.length > 0 && (
                     <div>
                       <Label htmlFor="selectedDate" className="mb-2 flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
                         Select Date
                       </Label>
                       <Select value={selectedDate} onValueChange={setSelectedDate}>
@@ -270,7 +270,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                   {listing.available_times && listing.available_times.length > 0 && (
                     <div>
                       <Label htmlFor="selectedTime" className="mb-2 flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
+                        <Clock className="h-4 w-4 text-muted-foreground" />
                         Select Time
                       </Label>
                       <Select value={selectedTime} onValueChange={setSelectedTime}>

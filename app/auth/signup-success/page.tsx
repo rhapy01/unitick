@@ -18,24 +18,24 @@ export default function SignupSuccessPage() {
             </p>
             
             {/* Next Steps */}
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="bg-gradient-to-br from-pink-100 via-rose-100 to-pink-200 dark:from-blue-950/20 dark:to-blue-900/20 border border-pink-200 dark:border-blue-800 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <Wallet className="h-5 w-5 text-pink-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100">
+                  <h4 className="font-medium text-pink-900 dark:text-blue-100">
                     Next: Setup Your Wallet
                   </h4>
-                  <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                  <div className="text-sm text-pink-800 dark:text-blue-200 space-y-1">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                      <CheckCircle2 className="h-4 w-4 text-pink-600 dark:text-blue-500" />
                       <span>Confirm your email first</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                      <CheckCircle2 className="h-4 w-4 text-pink-600 dark:text-blue-500" />
                       <span>Login to your dashboard</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                      <CheckCircle2 className="h-4 w-4 text-pink-600 dark:text-blue-500" />
                       <span>Create your wallet with one click</span>
                     </div>
                   </div>

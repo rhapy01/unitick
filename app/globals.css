@@ -614,8 +614,8 @@ html.gradient .gradient-pulse {
     stroke: currentColor;
   }
   
-  /* Theme-specific icon adjustments */
-  html.gradient svg {
+  /* Theme-specific icon adjustments - but exclude specific color classes */
+  html.gradient svg:not(.text-blue-600):not(.text-blue-500):not(.text-blue-400):not(.text-green-600):not(.text-green-500):not(.text-green-400):not(.text-purple-600):not(.text-purple-500):not(.text-purple-400):not(.text-orange-600):not(.text-orange-500):not(.text-orange-400):not(.text-yellow-500):not(.text-yellow-400):not(.text-red-500):not(.text-red-400):not(.text-pink-500):not(.text-pink-400):not(.text-accent):not(.text-primary) {
     color: var(--icon-secondary);
   }
   
@@ -632,8 +632,62 @@ html.gradient .gradient-pulse {
     color: var(--icon-primary);
   }
   
+  /* Override SVG color for accent icons in dark mode */
+  .dark svg.text-accent {
+    color: #3b82f6 !important;
+  }
+  
   .dark .text-accent {
-    color: var(--icon-primary) !important;
+    color: #3b82f6 !important;
+  }
+  
+  /* Ensure accent colors work properly */
+  :root:not(.gradient) .text-accent {
+    color: #3b82f6 !important;
+  }
+  
+  html.gradient .text-accent {
+    color: #E4405F !important;
+  }
+  
+  /* Ensure CheckCircle2 icon is visible */
+  .dark .text-accent svg,
+  .dark svg.text-accent {
+    color: #3b82f6 !important;
+    fill: #3b82f6 !important;
+    stroke: #3b82f6 !important;
+  }
+  
+  html.gradient .text-accent svg,
+  html.gradient svg.text-accent {
+    color: #E4405F !important;
+    fill: #E4405F !important;
+    stroke: #E4405F !important;
+  }
+  
+  /* Override global * rule for accent icons */
+  .dark .text-accent[class*="h-16"],
+  .dark [class*="h-16"].text-accent {
+    color: #3b82f6 !important;
+  }
+  
+  html.gradient .text-accent[class*="h-16"],
+  html.gradient [class*="h-16"].text-accent {
+    color: #E4405F !important;
+  }
+  
+  /* SPECIFIC FIX: CheckCircle2 icon in dark mode */
+  .dark .h-16.w-16.text-accent.mx-auto.mb-4 {
+    color: #3b82f6 !important;
+    fill: #3b82f6 !important;
+    stroke: #3b82f6 !important;
+  }
+  
+  /* SPECIFIC FIX: CheckCircle2 icon in gradient mode */
+  html.gradient .h-16.w-16.text-accent.mx-auto.mb-4 {
+    color: #E4405F !important;
+    fill: #E4405F !important;
+    stroke: #E4405F !important;
   }
   
   /* Fix gradient theme icon colors */
@@ -641,6 +695,63 @@ html.gradient .gradient-pulse {
   html.gradient .text-green-500,
   html.gradient .text-green-400 {
     color: #10b981 !important;
+  }
+  
+  html.gradient .text-blue-600,
+  html.gradient .text-blue-500,
+  html.gradient .text-blue-400 {
+    color: #3b82f6 !important;
+  }
+  
+  html.gradient .text-purple-600,
+  html.gradient .text-purple-500,
+  html.gradient .text-purple-400 {
+    color: #8b5cf6 !important;
+  }
+  
+  /* Specific SVG icon overrides for gradient theme */
+  html.gradient svg.text-blue-600,
+  html.gradient svg.text-blue-500,
+  html.gradient svg.text-blue-400,
+  html.gradient .text-blue-600 svg,
+  html.gradient .text-blue-500 svg,
+  html.gradient .text-blue-400 svg {
+    color: #3b82f6 !important;
+    fill: #3b82f6 !important;
+    stroke: #3b82f6 !important;
+  }
+  
+  html.gradient svg.text-green-600,
+  html.gradient svg.text-green-500,
+  html.gradient svg.text-green-400,
+  html.gradient .text-green-600 svg,
+  html.gradient .text-green-500 svg,
+  html.gradient .text-green-400 svg {
+    color: #10b981 !important;
+    fill: #10b981 !important;
+    stroke: #10b981 !important;
+  }
+  
+  html.gradient svg.text-purple-600,
+  html.gradient svg.text-purple-500,
+  html.gradient svg.text-purple-400,
+  html.gradient .text-purple-600 svg,
+  html.gradient .text-purple-500 svg,
+  html.gradient .text-purple-400 svg {
+    color: #8b5cf6 !important;
+    fill: #8b5cf6 !important;
+    stroke: #8b5cf6 !important;
+  }
+  
+  html.gradient svg.text-orange-600,
+  html.gradient svg.text-orange-500,
+  html.gradient svg.text-orange-400,
+  html.gradient .text-orange-600 svg,
+  html.gradient .text-orange-500 svg,
+  html.gradient .text-orange-400 svg {
+    color: #f97316 !important;
+    fill: #f97316 !important;
+    stroke: #f97316 !important;
   }
   
   html.gradient .text-yellow-500,
@@ -973,9 +1084,81 @@ html.gradient .gradient-pulse {
     color: #ffffff !important;
   }
   
-  /* Force all text to be white in gradient theme */
-  html.gradient * {
+  
+  /* Fix badge text visibility in gradient theme - MUST be after the global * rule */
+  html.gradient [data-slot="badge"],
+  html.gradient span[data-slot="badge"],
+  html.gradient .inline-flex[data-slot="badge"] {
     color: #ffffff !important;
+    background-color: #E4405F !important;
+    border-color: #E4405F !important;
+  }
+  
+  /* Force pink badges to be readable */
+  html.gradient .bg-green-600,
+  html.gradient .bg-green-500,
+  html.gradient .text-white.bg-green-600,
+  html.gradient .text-white.bg-green-500 {
+    background-color: #E4405F !important;
+    color: #ffffff !important;
+  }
+  
+  /* Override any conflicting badge styles */
+  html.gradient span[class*="bg-green"] {
+    background-color: #E4405F !important;
+    color: #ffffff !important;
+  }
+  
+  /* NUCLEAR OPTION - Force ALL badges to be readable in gradient theme */
+  html.gradient span.inline-flex.items-center.justify-center.rounded-md.border {
+    color: #ffffff !important;
+    background-color: #E4405F !important;
+    border-color: #E4405F !important;
+  }
+  
+  /* Even more specific - target the exact badge classes */
+  html.gradient span.inline-flex.items-center.justify-center.rounded-md.border.px-2.py-0\.5.text-xs.font-medium {
+    color: #ffffff !important;
+    background-color: #E4405F !important;
+    border-color: #E4405F !important;
+  }
+  
+  /* DARK THEME - Use blue color for badges */
+  .dark [data-slot="badge"],
+  .dark span[data-slot="badge"],
+  .dark .inline-flex[data-slot="badge"] {
+    color: #ffffff !important;
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+  }
+  
+  /* Dark theme - Force blue badges to be readable */
+  .dark .bg-green-600,
+  .dark .bg-green-500,
+  .dark .text-white.bg-green-600,
+  .dark .text-white.bg-green-500 {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+  }
+  
+  /* Dark theme - Override any conflicting badge styles */
+  .dark span[class*="bg-green"] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+  }
+  
+  /* Dark theme - Force ALL badges to be readable */
+  .dark span.inline-flex.items-center.justify-center.rounded-md.border {
+    color: #ffffff !important;
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+  }
+  
+  /* Dark theme - Target the exact badge classes */
+  .dark span.inline-flex.items-center.justify-center.rounded-md.border.px-2.py-0\.5.text-xs.font-medium {
+    color: #ffffff !important;
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
   }
   
   /* Override muted text specifically */
@@ -1001,6 +1184,56 @@ html.gradient .gradient-pulse {
     color: #ffffff !important;
   }
   
+  /* Fix TabsTrigger hover text readability in gradient theme */
+  html.gradient [data-slot="tabs-trigger"]:hover,
+  html.gradient [role="tab"]:hover {
+    color: #ffffff !important;
+  }
+  
+  html.gradient [data-slot="tabs-trigger"].hover\:text-accent:hover,
+  html.gradient [role="tab"].hover\:text-accent:hover {
+    color: #ffffff !important;
+  }
+  
+  /* Specific fix for service category tabs in shop page */
+  html.gradient .data-\[state\=active\]\:bg-accent.data-\[state\=active\]\:text-accent-foreground.hover\:bg-accent\/10.hover\:text-white:hover {
+    color: #ffffff !important;
+  }
+  
+  /* Comprehensive fix for all hover:text-accent elements in gradient theme */
+  html.gradient .hover\:text-accent:hover,
+  html.gradient .group-hover\:text-accent:hover,
+  html.gradient [class*="hover:text-accent"]:hover {
+    color: #ffffff !important;
+  }
+  
+  /* Fix button ghost variant hover text */
+  html.gradient button[class*="hover:text-accent-foreground"]:hover {
+    color: #ffffff !important;
+  }
+  
+  /* Fix notification dropdown and all dropdown menus to have solid background */
+  html.gradient [data-slot="dropdown-menu-content"] {
+    background-color: rgba(0, 0, 0, 1) !important;
+    backdrop-filter: none !important;
+  }
+  
+  /* Ensure popover has solid background in gradient theme */
+  html.gradient .bg-popover {
+    background-color: rgba(0, 0, 0, 1) !important;
+  }
+  
+  /* Fix notification dropdown and all dropdown menus to have solid background in dark mode */
+  .dark [data-slot="dropdown-menu-content"] {
+    background-color: rgba(0, 0, 0, 1) !important;
+    backdrop-filter: none !important;
+  }
+  
+  /* Ensure popover has solid background in dark mode */
+  .dark .bg-popover {
+    background-color: rgba(0, 0, 0, 1) !important;
+  }
+  
   html.gradient .alert-description,
   html.gradient .alert-content {
     color: #ffffff !important;
@@ -1018,6 +1251,7 @@ html.gradient .gradient-pulse {
   }
   
   /* Dark theme specific color fixes for better contrast */
+  .dark .text-blue-600,
   .dark .text-blue-500,
   .dark .text-blue-400 {
     color: #60a5fa !important;
@@ -1027,6 +1261,12 @@ html.gradient .gradient-pulse {
   .dark .text-green-500,
   .dark .text-green-400 {
     color: #34d399 !important;
+  }
+  
+  .dark .text-purple-600,
+  .dark .text-purple-500,
+  .dark .text-purple-400 {
+    color: #a78bfa !important;
   }
   
   .dark .text-yellow-500,

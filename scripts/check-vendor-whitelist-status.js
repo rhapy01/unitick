@@ -63,7 +63,7 @@ const contractABI = [
   }
 ]
 
-const CONTRACT_ADDRESS = "0xcB0c644F4A040F0a2026043fA57121ac6Cac8f08"
+const CONTRACT_ADDRESS = "0xc4e90Dcd9Da001Dc463570d66d8281821De58D5C"
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || 'https://sepolia.base.org'
 
 // Vendor addresses from the error

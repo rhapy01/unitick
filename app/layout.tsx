@@ -15,7 +15,16 @@ export const metadata: Metadata = {
   title: "UniTick",
   description:
     "Book accommodation, car hire, tours, cinema, and events with crypto - Earn Unila Miles with every booking!",
-    generator: 'v0.app'
+  generator: 'v0.app',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
@@ -147,18 +156,6 @@ export default function RootLayout({
                    html.gradient .ring-primary,
                    html.gradient [class*="ring-primary"] {
                      --tw-ring-color: #ffffff !important;
-                   }
-                   /* ALL text elements should be WHITE in both themes */
-                   :root:not(.gradient) h1,
-                   :root:not(.gradient) h2,
-                   :root:not(.gradient) h3,
-                   :root:not(.gradient) h4,
-                   :root:not(.gradient) h5,
-                   :root:not(.gradient) h6,
-                   :root:not(.gradient) p,
-                   :root:not(.gradient) span,
-                   :root:not(.gradient) div {
-                     color: #ffffff !important;
                    }
                    html.gradient h1,
                    html.gradient h2,

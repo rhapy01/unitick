@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     console.log('[Approval API] UniTick token address:', getContractAddress("UNITICK"))
     console.log('[Approval API] Approval amount:', approvalAmount.toString())
     
-    const hash = await approveUniTickTokens(approvalAmount, walletClient)
+    const hash = await approveUniTickTokens(approvalAmount, walletClient, getUnilaBookAddress())
     console.log('[Approval API] Approval transaction hash:', hash)
 
     // Wait for transaction confirmation
@@ -199,6 +199,10 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Wait a moment for blockchain state to update
+    console.log('[Approval API] Waiting for blockchain state to update...')
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     // Verify the new allowance
     console.log('[Approval API] Verifying new allowance...')

@@ -122,4 +122,199 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Fix SVG icons visibility in gradient theme */
+  html.gradient .text-muted-foreground {
+    color: #b3b3b3 !important;
+  }
+  
+  html.gradient svg.text-muted-foreground,
+  html.gradient .text-muted-foreground svg {
+    color: #b3b3b3 !important;
+    fill: #b3b3b3 !important;
+    stroke: #b3b3b3 !important;
+  }
+  
+  /* Specific fixes for common listing icons */
+  html.gradient .h-4.w-4.text-muted-foreground,
+  html.gradient .h-5.w-5.text-muted-foreground,
+  html.gradient .h-3.w-3.text-muted-foreground {
+    color: #b3b3b3 !important;
+    fill: #b3b3b3 !important;
+    stroke: #b3b3b3 !important;
+  }
+  
+  /* Fix all SVG icons in gradient theme - but exclude specific color classes */
+  html.gradient svg:not(.text-blue-600):not(.text-blue-500):not(.text-blue-400):not(.text-green-600):not(.text-green-500):not(.text-green-400):not(.text-purple-600):not(.text-purple-500):not(.text-purple-400):not(.text-orange-600):not(.text-orange-500):not(.text-orange-400):not(.text-yellow-500):not(.text-yellow-400):not(.text-red-500):not(.text-red-400):not(.text-pink-500):not(.text-pink-400):not(.text-accent):not(.text-primary) {
+    color: #b3b3b3 !important;
+    fill: #b3b3b3 !important;
+    stroke: #b3b3b3 !important;
+  }
+  
+  /* Override for accent icons */
+  html.gradient svg.text-accent,
+  html.gradient .text-accent svg {
+    color: #E4405F !important;
+    fill: #E4405F !important;
+    stroke: #E4405F !important;
+  }
+  
+  /* Override for primary icons */
+  html.gradient svg.text-primary,
+  html.gradient .text-primary svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+  }
+  
+  /* Specific dashboard icon overrides for gradient theme */
+  html.gradient svg.text-blue-600,
+  html.gradient svg.text-blue-500,
+  html.gradient svg.text-blue-400,
+  html.gradient .text-blue-600 svg,
+  html.gradient .text-blue-500 svg,
+  html.gradient .text-blue-400 svg {
+    color: #3b82f6 !important;
+    fill: #3b82f6 !important;
+    stroke: #3b82f6 !important;
+  }
+  
+  html.gradient svg.text-green-600,
+  html.gradient svg.text-green-500,
+  html.gradient svg.text-green-400,
+  html.gradient .text-green-600 svg,
+  html.gradient .text-green-500 svg,
+  html.gradient .text-green-400 svg {
+    color: #10b981 !important;
+    fill: #10b981 !important;
+    stroke: #10b981 !important;
+  }
+  
+  html.gradient svg.text-purple-600,
+  html.gradient svg.text-purple-500,
+  html.gradient svg.text-purple-400,
+  html.gradient .text-purple-600 svg,
+  html.gradient .text-purple-500 svg,
+  html.gradient .text-purple-400 svg {
+    color: #8b5cf6 !important;
+    fill: #8b5cf6 !important;
+    stroke: #8b5cf6 !important;
+  }
+  
+  html.gradient svg.text-orange-600,
+  html.gradient svg.text-orange-500,
+  html.gradient svg.text-orange-400,
+  html.gradient .text-orange-600 svg,
+  html.gradient .text-orange-500 svg,
+  html.gradient .text-orange-400 svg {
+    color: #f97316 !important;
+    fill: #f97316 !important;
+    stroke: #f97316 !important;
+  }
+  
+  /* Fix form elements in gradient theme */
+  html.gradient input,
+  html.gradient .input {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient input:focus,
+  html.gradient .input:focus {
+    border-color: #E4405F !important;
+    box-shadow: 0 0 0 2px rgba(228, 64, 95, 0.2) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  html.gradient input::placeholder,
+  html.gradient .input::placeholder {
+    color: #6b7280 !important;
+  }
+  
+  /* Fix select elements */
+  html.gradient [data-slot="select-trigger"] {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient [data-slot="select-trigger"]:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  html.gradient [data-slot="select-trigger"]:focus {
+    border-color: #E4405F !important;
+    box-shadow: 0 0 0 2px rgba(228, 64, 95, 0.2) !important;
+  }
+  
+  html.gradient [data-slot="select-content"] {
+    background-color: rgba(0, 0, 0, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient [data-slot="select-item"] {
+    color: #ffffff !important;
+  }
+  
+  html.gradient [data-slot="select-item"]:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  html.gradient [data-slot="select-item"][data-highlighted] {
+    background-color: rgba(228, 64, 95, 0.2) !important;
+  }
+  
+  /* Fix buttons */
+  html.gradient button[data-slot="button"] {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .bg-accent {
+    background-color: #E4405F !important;
+    color: #ffffff !important;
+  }
+  
+  html.gradient .bg-accent:hover {
+    background-color: #d6336c !important;
+  }
+  
+  /* Fix cards */
+  html.gradient [data-slot="card"],
+  html.gradient .card {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+  }
+  
+  /* Fix labels */
+  html.gradient label {
+    color: #ffffff !important;
+  }
+  
+  /* Fix text colors */
+  html.gradient .text-muted-foreground {
+    color: #b3b3b3 !important;
+  }
+  
+  html.gradient .text-foreground {
+    color: #ffffff !important;
+  }
+  
+  /* Fix borders */
+  html.gradient .border-border {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* Fix badges */
+  html.gradient [data-slot="badge"] {
+    color: #ffffff !important;
+  }
+  
+  html.gradient .badge {
+    color: #ffffff !important;
+  }
+  
+  /* Image indicators now use theme-aware colors */
 }

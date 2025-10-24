@@ -11,7 +11,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Clock, CheckCircle, AlertCircle, CreditCard, X, RefreshCw } from "lucide-react"
+import { Loader2, Clock, CheckCircle, AlertCircle, CreditCard, X, RefreshCw, ChevronDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { formatAddress } from "@/lib/wallet"
 import { UNITICK_ADDRESS } from "@/lib/addresses"
@@ -19,6 +19,7 @@ import { unitickAbi } from "@/lib/contract-client"
 import { Plus, Package, Calendar, User, Settings, Wallet, Bell, ShoppingCart, ShoppingBag, Coins } from "lucide-react"
 import Link from "next/link"
 import { WalletManagement } from "@/components/wallet-management"
+import { UserProfileCard } from "@/components/user-profile-card"
 
 // Faucet Claim Component
 function FaucetClaimComponent({ profile }: { profile: Profile | null }) {
@@ -28,8 +29,6 @@ function FaucetClaimComponent({ profile }: { profile: Profile | null }) {
   const [canClaim, setCanClaim] = useState<boolean | null>(null)
   const [timeUntilNextClaim, setTimeUntilNextClaim] = useState<string | null>(null)
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
-  const [password, setPassword] = useState('')
-  const [showPasswordInput, setShowPasswordInput] = useState(false)
 
   useEffect(() => {
     checkClaimStatus()
@@ -91,21 +90,13 @@ function FaucetClaimComponent({ profile }: { profile: Profile | null }) {
   const handleClaimFaucet = async () => {
     if (!canClaim) return
 
-    if (!password) {
-      setShowPasswordInput(true)
-      return
-    }
-
     setIsClaiming(true)
     try {
       const response = await fetch('/api/faucet/claim', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          password: password
-        })
+        }
       })
 
       const result = await response.json()
@@ -130,25 +121,11 @@ function FaucetClaimComponent({ profile }: { profile: Profile | null }) {
         console.error('[Frontend] Error setting can claim:', e)
       }
       
-      try {
-        setPassword('') // Clear password for security
-        console.log('[Frontend] Password cleared')
-      } catch (e) {
-        console.error('[Frontend] Error clearing password:', e)
-      }
-      
-      try {
-        setShowPasswordInput(false) // Hide password input
-        console.log('[Frontend] Password input hidden')
-      } catch (e) {
-        console.error('[Frontend] Error hiding password input:', e)
-      }
-      
       console.log('[Frontend] Showing success toast')
       try {
         toast({
           title: "Claim Successful",
-          description: "200,000 UniTick tokens claimed successfully!",
+          description: result.message || "200,000 UniTick tokens claimed successfully!",
         })
         console.log('[Frontend] Success toast shown')
       } catch (e) {
@@ -260,56 +237,18 @@ function FaucetClaimComponent({ profile }: { profile: Profile | null }) {
         </Alert>
 
         <div className="flex items-center gap-4">
-          {!showPasswordInput ? (
-            <Button
-              onClick={handleClaimFaucet}
-              disabled={isClaiming}
-              className="flex items-center gap-2"
-            >
-              {isClaiming ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Coins className="h-4 w-4" />
-              )}
-              {isClaiming ? 'Claiming...' : 'Claim UniTick Tokens'}
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2 w-full">
-              <Input
-                type="password"
-                placeholder="Enter your password to claim tokens"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleClaimFaucet()
-                  }
-                }}
-              />
-              <Button
-                onClick={handleClaimFaucet}
-                disabled={isClaiming || !password}
-                className="flex items-center gap-2"
-              >
-                {isClaiming ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Coins className="h-4 w-4" />
-                )}
-                {isClaiming ? 'Claiming...' : 'Claim'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowPasswordInput(false)
-                  setPassword('')
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
+          <Button
+            onClick={handleClaimFaucet}
+            disabled={isClaiming}
+            className="flex items-center gap-2"
+          >
+            {isClaiming ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Coins className="h-4 w-4" />
+            )}
+            {isClaiming ? 'Claiming...' : 'Claim UniTick Tokens'}
+          </Button>
 
           <div className="text-sm text-muted-foreground">
             <div>Wallet: {profile.wallet_address ? formatAddress(profile.wallet_address) : 'Not available'}</div>
@@ -355,6 +294,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
   const router = useRouter()
   const supabase = createClient()
   const { toast } = useToast()
@@ -369,6 +309,18 @@ export default function DashboardPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    })
+  }
+
+  const toggleOrderExpansion = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId)
+      } else {
+        newSet.add(orderId)
+      }
+      return newSet
     })
   }
 
@@ -702,12 +654,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* User Profile Section */}
+          <div className="mb-8">
+            <UserProfileCard profile={profile} isVendor={true} />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
             <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 rounded-full bg-primary/10 shrink-0">
-                    <Package className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  <div className="p-2 sm:p-3 rounded-full bg-blue-100 dark:bg-blue-900/20 shrink-0">
+                    <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-muted-foreground">Total Listings</p>
@@ -720,8 +677,8 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 rounded-full bg-accent/10 shrink-0">
-                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+                  <div className="p-2 sm:p-3 rounded-full bg-green-100 dark:bg-green-900/20 shrink-0">
+                    <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-muted-foreground">Total Bookings</p>
@@ -734,8 +691,8 @@ export default function DashboardPage() {
             <Card className="sm:col-span-2 md:col-span-1">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="p-2 sm:p-3 rounded-full bg-primary/10 shrink-0">
-                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  <div className="p-2 sm:p-3 rounded-full bg-purple-100 dark:bg-purple-900/20 shrink-0">
+                    <User className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm text-muted-foreground">Active Listings</p>
@@ -867,6 +824,29 @@ export default function DashboardPage() {
   const pendingBookings = bookings.filter(b => b.status === 'pending')
   const confirmedBookings = bookings.filter(b => b.status === 'confirmed')
 
+  // Group bookings by order_id to show them as bundles
+  const groupBookingsByOrder = (bookings: Booking[]) => {
+    const grouped = bookings.reduce((acc, booking) => {
+      const orderId = (booking as any).order_id || 'no-order'
+      if (!acc[orderId]) {
+        acc[orderId] = []
+      }
+      acc[orderId].push(booking)
+      return acc
+    }, {} as Record<string, Booking[]>)
+    
+    return Object.values(grouped).map(orderBookings => ({
+      orderId: (orderBookings[0] as any).order_id,
+      bookings: orderBookings,
+      totalAmount: orderBookings.reduce((sum, b) => sum + b.total_amount, 0),
+      createdAt: orderBookings[0].created_at,
+      status: orderBookings[0].status // All bookings in an order should have same status
+    }))
+  }
+
+  const groupedConfirmedBookings = groupBookingsByOrder(confirmedBookings)
+  const groupedPendingBookings = groupBookingsByOrder(pendingBookings)
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -899,111 +879,197 @@ export default function DashboardPage() {
                     </TabsList>
                     
                     <TabsContent value="confirmed" className="space-y-4">
-                      {confirmedBookings.length === 0 ? (
+                      {groupedConfirmedBookings.length === 0 ? (
                         <div className="text-center py-8">
                           <p className="text-muted-foreground">No confirmed bookings yet</p>
                         </div>
                       ) : (
-                        confirmedBookings.map((booking) => (
-                      <div
-                        key={booking.id}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg gap-3"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">{(booking as any).listing?.title}</h3>
-                          <p className="text-sm text-muted-foreground truncate">{(booking as any).listing?.location}</p>
-                          <p className="text-sm text-muted-foreground">{formatDate(booking.booking_date)}</p>
-                        </div>
-                        <div className="flex flex-col sm:items-end sm:text-right gap-2">
-                          <p className="font-semibold">${booking.total_amount.toFixed(2)}</p>
-                          <div className="flex flex-col sm:items-end gap-2">
-                                <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-500">
-                                  ✓ Paid
-                                </span>
-                                {(booking as any).order_id ? (
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    className="text-xs h-7"
-                                    asChild
-                                  >
-                                    <Link href={`/order/${(booking as any).order_id}`}>
-                                      <CheckCircle className="h-3 w-3 mr-1" />
-                                      View Ticket & QR Code
-                                    </Link>
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs h-7"
-                                    disabled
-                                    title="Order information not available"
-                                  >
-                                    <AlertCircle className="h-3 w-3 mr-1" />
-                                    No Order Info
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))
+                         groupedConfirmedBookings.map((orderGroup) => {
+                           const orderKey = orderGroup.orderId || 'no-order'
+                           const isExpanded = expandedOrders.has(orderKey)
+                           
+                           return (
+                             <div
+                               key={orderKey}
+                               className="border border-border rounded-lg overflow-hidden"
+                             >
+                               {/* Order Header - Clickable */}
+                               <div 
+                                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                                 onClick={() => toggleOrderExpansion(orderKey)}
+                               >
+                                 <div className="flex items-center gap-3 flex-1 min-w-0">
+                                   <ChevronDown 
+                                     className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                   />
+                                   <div className="flex-1 min-w-0">
+                                     <h3 className="font-semibold text-lg">
+                                       Order #{orderGroup.orderId ? orderGroup.orderId.slice(0, 8) : 'No Order ID'}
+                                     </h3>
+                                     <p className="text-sm text-muted-foreground">
+                                       {formatDate(orderGroup.createdAt)} • {orderGroup.bookings.length} ticket{orderGroup.bookings.length > 1 ? 's' : ''}
+                                     </p>
+                                   </div>
+                                 </div>
+                                 <div className="flex flex-col sm:items-end gap-2">
+                                   <p className="text-lg font-semibold">${orderGroup.totalAmount.toFixed(2)}</p>
+                                   <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                     ✓ Paid
+                                   </span>
+                                   {orderGroup.orderId ? (
+                                     <Button
+                                       size="sm"
+                                       variant="default"
+                                       className="text-xs h-7"
+                                       asChild
+                                       onClick={(e) => e.stopPropagation()}
+                                     >
+                                       <Link href={`/order/${orderGroup.orderId}`}>
+                                         <CheckCircle className="h-3 w-3 mr-1" />
+                                         View Tickets & QR Codes
+                                       </Link>
+                                     </Button>
+                                   ) : (
+                                     <Button
+                                       size="sm"
+                                       variant="outline"
+                                       className="text-xs h-7"
+                                       disabled
+                                       title="Order information not available"
+                                       onClick={(e) => e.stopPropagation()}
+                                     >
+                                       <AlertCircle className="h-3 w-3 mr-1" />
+                                       No Order Info
+                                     </Button>
+                                   )}
+                                 </div>
+                               </div>
+                               
+                               {/* Individual Tickets - Collapsible */}
+                               {isExpanded && (
+                                 <div className="border-t border-border p-4 space-y-2 bg-muted/10">
+                                   {orderGroup.bookings.map((booking) => (
+                                     <div
+                                       key={booking.id}
+                                       className="flex items-center justify-between p-3 bg-background rounded-md border"
+                                     >
+                                       <div className="flex-1 min-w-0">
+                                         <h4 className="font-medium truncate">{(booking as any).listing?.title}</h4>
+                                         <p className="text-sm text-muted-foreground">
+                                           {formatDate(booking.booking_date)} • ${booking.total_amount.toFixed(2)}
+                                         </p>
+                                       </div>
+                                       <div className="text-sm text-muted-foreground">
+                                         {(booking as any).listing?.vendor?.business_name}
+                                       </div>
+                                     </div>
+                                   ))}
+                                 </div>
+                               )}
+                             </div>
+                           )
+                         })
                       )}
                     </TabsContent>
 
                     <TabsContent value="pending" className="space-y-4">
-                      {pendingBookings.length === 0 ? (
+                      {groupedPendingBookings.length === 0 ? (
                         <div className="text-center py-8">
                           <p className="text-muted-foreground">No pending bookings</p>
                         </div>
                       ) : (
                         <>
-                          {pendingBookings.map((booking) => (
-                          <div
-                            key={booking.id}
-                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg gap-3"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold truncate">{(booking as any).listing?.title}</h3>
-                              <p className="text-sm text-muted-foreground truncate">{(booking as any).listing?.location}</p>
-                              <p className="text-sm text-muted-foreground">{formatDate(booking.booking_date)}</p>
-                            </div>
-                            <div className="flex flex-col sm:items-end sm:text-right gap-2">
-                              <p className="font-semibold">${booking.total_amount.toFixed(2)}</p>
-                              <div className="flex flex-col sm:items-end gap-2">
-                                <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
-                                  pending
-                            </span>
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs h-7"
-                                  onClick={() => handleResumePayment(booking)}
-                                  disabled={cancellingBookingId === booking.id}
-                                >
-                                  <CreditCard className="h-3 w-3 mr-1" />
-                                  Resume Payment
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  disabled={cancellingBookingId === booking.id}
-                                >
-                                  {cancellingBookingId === booking.id ? (
-                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                  ) : (
-                                    <X className="h-3 w-3 mr-1" />
-                                  )}
-                                  Cancel
-                                </Button>
-                              </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                           {groupedPendingBookings.map((orderGroup) => {
+                             const orderKey = orderGroup.orderId || 'no-order'
+                             const isExpanded = expandedOrders.has(orderKey)
+                             
+                             return (
+                               <div
+                                 key={orderKey}
+                                 className="border border-border rounded-lg overflow-hidden"
+                               >
+                                 {/* Order Header - Clickable */}
+                                 <div 
+                                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                                   onClick={() => toggleOrderExpansion(orderKey)}
+                                 >
+                                   <div className="flex items-center gap-3 flex-1 min-w-0">
+                                     <ChevronDown 
+                                       className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                     />
+                                     <div className="flex-1 min-w-0">
+                                       <h3 className="font-semibold text-lg">
+                                         Order #{orderGroup.orderId ? orderGroup.orderId.slice(0, 8) : 'No Order ID'}
+                                       </h3>
+                                       <p className="text-sm text-muted-foreground">
+                                         {formatDate(orderGroup.createdAt)} • {orderGroup.bookings.length} ticket{orderGroup.bookings.length > 1 ? 's' : ''}
+                                       </p>
+                                     </div>
+                                   </div>
+                                   <div className="flex flex-col sm:items-end gap-2">
+                                     <p className="text-lg font-semibold">${orderGroup.totalAmount.toFixed(2)}</p>
+                                     <span className="text-xs px-2 py-1 rounded whitespace-nowrap bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-500">
+                                       pending
+                                     </span>
+                                     <div className="flex gap-2">
+                                       <Button
+                                         size="sm"
+                                         variant="outline"
+                                         className="text-xs h-7"
+                                         onClick={(e) => {
+                                           e.stopPropagation()
+                                           handleResumePayment(orderGroup.bookings[0])
+                                         }}
+                                         disabled={cancellingBookingId === orderGroup.bookings[0].id}
+                                       >
+                                         <CreditCard className="h-3 w-3 mr-1" />
+                                         Resume Payment
+                                       </Button>
+                                       <Button
+                                         size="sm"
+                                         variant="outline"
+                                         className="text-xs h-7 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                         onClick={(e) => {
+                                           e.stopPropagation()
+                                           handleCancelBooking(orderGroup.bookings[0].id)
+                                         }}
+                                         disabled={cancellingBookingId === orderGroup.bookings[0].id}
+                                       >
+                                         {cancellingBookingId === orderGroup.bookings[0].id ? (
+                                           <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                         ) : (
+                                           <X className="h-3 w-3 mr-1" />
+                                         )}
+                                         Cancel
+                                       </Button>
+                                     </div>
+                                   </div>
+                                 </div>
+                                 
+                                 {/* Individual Tickets - Collapsible */}
+                                 {isExpanded && (
+                                   <div className="border-t border-border p-4 space-y-2 bg-muted/10">
+                                     {orderGroup.bookings.map((booking) => (
+                                       <div
+                                         key={booking.id}
+                                         className="flex items-center justify-between p-3 bg-background rounded-md border"
+                                       >
+                                         <div className="flex-1 min-w-0">
+                                           <h4 className="font-medium truncate">{(booking as any).listing?.title}</h4>
+                                           <p className="text-sm text-muted-foreground">
+                                             {formatDate(booking.booking_date)} • ${booking.total_amount.toFixed(2)}
+                                           </p>
+                                         </div>
+                                         <div className="text-sm text-muted-foreground">
+                                           {(booking as any).listing?.vendor?.business_name}
+                                         </div>
+                                       </div>
+                                     ))}
+                                   </div>
+                                 )}
+                               </div>
+                             )
+                           })}
                         </>
                       )}
                     </TabsContent>
@@ -1015,6 +1081,9 @@ export default function DashboardPage() {
 
           <div className="lg:col-span-1">
             <div className="space-y-6">
+              {/* User Profile */}
+              <UserProfileCard profile={profile} isVendor={false} />
+
               {/* Wallet Management */}
               <WalletManagement profile={profile} />
 

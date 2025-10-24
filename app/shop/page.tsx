@@ -306,7 +306,7 @@ export default function ShopPage() {
               <TabsTrigger 
                 key={category.type} 
                 value={category.type}
-                className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:text-accent transition-colors px-6 py-3 text-base"
+                className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground hover:bg-accent/10 hover:text-white transition-colors px-6 py-3 text-base"
               >
                 {SERVICE_TYPES[category.type]}
               </TabsTrigger>

@@ -340,7 +340,9 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status:</span>
-                  <Badge variant="default">{order.status}</Badge>
+                  <Badge className="bg-green-600 text-white border-green-600 hover:bg-green-700">
+                    {order.status}
+                  </Badge>
                 </div>
                 {order.transaction_hash && (
                   <div className="pt-2 border-t border-border">
@@ -451,15 +453,15 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
+                          <MapPin className="h-3 w-3 text-muted-foreground" />
                           <span>{booking.listing?.location}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
                           <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Building className="h-3 w-3" />
+                          <Building className="h-3 w-3 text-muted-foreground" />
                           <span>{booking.listing?.vendor?.business_name || 'Unknown Vendor'}</span>
                         </div>
                       </div>

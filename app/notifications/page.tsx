@@ -193,10 +193,10 @@ export default function NotificationsPage() {
               {notifications.map((notification) => (
                 <Card 
                   key={notification.id} 
-                  className={`transition-colors bg-white ${
+                  className={`transition-colors bg-background ${
                     notification.is_read 
-                      ? 'hover:bg-gray-50 border-gray-200' 
-                      : 'border-blue-200 hover:bg-blue-50 shadow-sm'
+                      ? 'hover:bg-muted border-border' 
+                      : 'border-primary hover:bg-accent/10 shadow-sm'
                   }`}
                 >
                   <CardContent className="p-6">

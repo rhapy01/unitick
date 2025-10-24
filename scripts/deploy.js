@@ -8,7 +8,7 @@ async function main() {
   console.log("Deploying UniTick stablecoin contract...");
 
   // Get the contract factory
-  const UniTick = await ethers.getContractFactory("UniTick");
+  const UniTick = await ethers.getContractFactory("contracts/UniTick.sol:UniTick");
 
   // Deploy the token contract
   const uniTick = await UniTick.deploy();
@@ -19,19 +19,19 @@ async function main() {
   // console.log("Token name:", await uniTick.name());
   // console.log("Token symbol:", await uniTick.symbol());
 
-  console.log("\nDeploying UnilaBook contract...");
+  console.log("\nDeploying UniTick contract...");
 
   // Get the contract factory
-  const UnilaBook = await ethers.getContractFactory("UnilaBook");
+  const UniTickContract = await ethers.getContractFactory("contracts/UniTick2.sol:UniTick");
 
   // Platform wallet address (use deployer address for testing)
   const platformWallet = process.env.PLATFORM_WALLET_ADDRESS || deployer.address;
 
   // Deploy the contract with UniTick token address
-  const unilaBook = await UnilaBook.deploy(platformWallet, await uniTick.getAddress());
-  await unilaBook.waitForDeployment();
+  const uniTickContract = await UniTickContract.deploy(platformWallet, await uniTick.getAddress());
+  await uniTickContract.waitForDeployment();
 
-  console.log("UnilaBook deployed to:", await unilaBook.getAddress());
+  console.log("UniTick contract deployed to:", await uniTickContract.getAddress());
   console.log("Platform wallet:", platformWallet);
 
   // Retry helper
@@ -52,23 +52,23 @@ async function main() {
   }
 
   // Verify deployment with retries (RPC can be eventually consistent)
-  const platformFee = await retry('Read platformFeeBps', () => unilaBook.platformFeeBps())
-  const platformWalletFromContract = await retry('Read platformWallet', () => unilaBook.platformWallet())
+  const platformFee = await retry('Read platformFeeBps', () => uniTickContract.platformFeeBps())
+  const platformWalletFromContract = await retry('Read platformWallet', () => uniTickContract.platformWallet())
 
   console.log("Platform fee:", platformFee.toString(), "basis points (0.5%)");
   console.log("Platform wallet from contract:", platformWalletFromContract);
 
   // Verify whitelist initialization
-  const isPlatformWhitelisted = await retry('Check platform whitelisted', () => unilaBook.isVendorWhitelisted(platformWallet))
+  const isPlatformWhitelisted = await retry('Check platform whitelisted', () => uniTickContract.isVendorWhitelisted(platformWallet))
   console.log("Platform wallet whitelisted:", isPlatformWhitelisted);
 
-  const whitelistCount = await retry('Read whitelist count', () => unilaBook.getWhitelistedVendorsCount())
+  const whitelistCount = await retry('Read whitelist count', () => uniTickContract.getWhitelistedVendorsCount())
   console.log("Total whitelisted vendors:", whitelistCount.toString());
 
   // Save deployment info
   const deploymentInfo = {
     uniTickAddress: await uniTick.getAddress(),
-    ticketContractAddress: await unilaBook.getAddress(),
+    ticketContractAddress: await uniTickContract.getAddress(),
     platformWallet: platformWallet,
     platformFee: platformFee.toString(),
     network: network.name,
@@ -86,7 +86,7 @@ async function main() {
       let content = fs.readFileSync(addressesPath, 'utf8')
       content = content.replace(
         /UNILABOOK:\s*"0x[0-9a-fA-F]{40}"/,
-        `UNILABOOK: "${await unilaBook.getAddress()}"`
+        `UNILABOOK: "${await uniTickContract.getAddress()}"`
       )
       content = content.replace(
         /UNITICK:\s*"0x[0-9a-fA-F]{40}"/,
@@ -102,7 +102,7 @@ async function main() {
       let constantsContent = fs.readFileSync(constantsPath, 'utf8')
       constantsContent = constantsContent.replace(
         /DEFAULT_TICKET_CONTRACT_ADDRESS\s*=\s*"0x[0-9a-fA-F]{40}"/,
-        `DEFAULT_TICKET_CONTRACT_ADDRESS = "${await unilaBook.getAddress()}"`
+        `DEFAULT_TICKET_CONTRACT_ADDRESS = "${await uniTickContract.getAddress()}"`
       )
       constantsContent = constantsContent.replace(
         /DEFAULT_UNITICK_CONTRACT_ADDRESS\s*=\s*"0x[0-9a-fA-F]{40}"/,
@@ -119,7 +119,7 @@ async function main() {
   console.log("\n=== Next Steps ===");
   console.log("1. (Optional) Update your .env file if you prefer env-config:");
   console.log(`   NEXT_PUBLIC_UNITICK_CONTRACT_ADDRESS=${await uniTick.getAddress()}`);
-  console.log(`   NEXT_PUBLIC_TICKET_CONTRACT_ADDRESS=${await unilaBook.getAddress()}`);
+  console.log(`   NEXT_PUBLIC_TICKET_CONTRACT_ADDRESS=${await uniTickContract.getAddress()}`);
   console.log(`   PLATFORM_WALLET_ADDRESS=${platformWallet}`);
   console.log("2. Verify the contracts on Etherscan (if on mainnet/testnet)");
   console.log("3. Update your frontend to use the new contract addresses");

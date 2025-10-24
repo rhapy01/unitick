@@ -623,7 +623,7 @@ export default function VendorSettingsPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full sm:w-auto order-1 sm:order-2 bg-primary hover:bg-primary/90"
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
                 <Save className="mr-2 h-4 w-4" />
                 {isLoading ? "Saving..." : "Save Changes"}

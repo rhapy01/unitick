@@ -27,7 +27,7 @@ export default function PaymentPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [profile, setProfile] = useState<any>(null)
   const [tokenStatus, setTokenStatus] = useState<any>(null)
-  const [needsApproval, setNeedsApproval] = useState<boolean>(false)
+  const [needsApproval, setNeedsApproval] = useState<boolean>(true)
   const [isApproving, setIsApproving] = useState<boolean>(false)
   const router = useRouter()
   const supabase = createClient()
@@ -102,9 +102,6 @@ export default function PaymentPage() {
       }
 
       setCartItems(items)
-      
-      // Check token status after loading cart items
-      await checkTokenStatus(user.id)
       
       setIsLoading(false)
     }
@@ -254,10 +251,7 @@ export default function PaymentPage() {
       console.log('[Payment] Token approval successful!')
       setErrorMessage('✅ Tokens approved successfully! You can now proceed with payment.')
       
-      // Refresh token status
-      await checkTokenStatus(userId)
-      
-      // Force set needsApproval to false since approval was successful
+      // Switch to payment button
       setNeedsApproval(false)
       
     } catch (error) {
@@ -268,45 +262,6 @@ export default function PaymentPage() {
     }
   }
 
-  const runPaymentDiagnostic = async () => {
-    try {
-      console.log('[Payment] Running payment diagnostic...')
-      setErrorMessage('Running diagnostic...')
-      
-      const response = await fetch('/api/payment-diagnostic', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cartItems,
-          userId
-        })
-      })
-
-      const result = await response.json()
-      console.log('[Payment] Diagnostic result:', result)
-
-      if (response.ok) {
-        const { diagnostics } = result
-        
-        if (diagnostics.summary.canProceed) {
-          setErrorMessage('✅ All validations passed! Payment should work.')
-        } else {
-          const issues = diagnostics.validation.issues.join('\n• ')
-          setErrorMessage(`❌ Found ${diagnostics.summary.totalIssues} issues:\n• ${issues}`)
-        }
-        
-        // Log detailed diagnostics
-        console.log('[Payment] Detailed diagnostics:', diagnostics)
-      } else {
-        setErrorMessage(`Diagnostic failed: ${result.error || 'Unknown error'}`)
-      }
-    } catch (error) {
-      console.error('[Payment] Diagnostic error:', error)
-      setErrorMessage('Failed to run diagnostic')
-    }
-  }
 
   const handlePayment = async () => {
     if (!walletAddress || !userId) return
@@ -518,7 +473,7 @@ export default function PaymentPage() {
                             ⚠️ Token approval required before payment
                           </div>
                         )}
-                        {!needsApproval && tokenStatus && (
+                        {!needsApproval && tokenStatus && tokenStatus.allowance && parseFloat(tokenStatus.allowance) > 0 && (
                           <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded text-sm text-green-800 dark:text-green-200">
                             ✅ Sufficient token allowance
                           </div>
@@ -535,16 +490,27 @@ export default function PaymentPage() {
                   )}
 
                   {paymentStatus === "success" && (
-                    <Alert>
-                      <CheckCircle2 className="h-4 w-4" />
-                      <AlertDescription>
-                        Payment successful! Redirecting to order details...
-                      </AlertDescription>
-                    </Alert>
+                    <div className="relative overflow-hidden rounded-lg border-2 border-green-500 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 p-6 shadow-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="flex-shrink-0">
+                          <CheckCircle2 className="h-8 w-8 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-white font-bold text-xl mb-2">
+                            ✅ Payment Confirmed!
+                          </h3>
+                          <p className="text-green-100 text-base">
+                            Your order has been successfully processed. Redirecting to order details...
+                          </p>
+                        </div>
+                      </div>
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
+                    </div>
                   )}
 
                   <div className="space-y-3">
-                    {needsApproval && (
+                    {needsApproval ? (
                       <Button
                         onClick={handleApproval}
                         disabled={isApproving || paymentStatus === "processing" || paymentStatus === "success"}
@@ -563,56 +529,22 @@ export default function PaymentPage() {
                           </>
                         )}
                       </Button>
+                    ) : (
+                      <Button
+                        onClick={handlePayment}
+                        disabled={paymentStatus === "processing" || paymentStatus === "success"}
+                        className="w-full"
+                      >
+                        {paymentStatus === "processing" ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Processing Payment...
+                          </>
+                        ) : (
+                          `Pay ${calculateTotal().toFixed(2)} UTICK`
+                        )}
+                      </Button>
                     )}
-                    
-                    <Button
-                      onClick={handlePayment}
-                      disabled={paymentStatus === "processing" || paymentStatus === "success" || needsApproval}
-                      className="w-full"
-                    >
-                      {paymentStatus === "processing" ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing Payment...
-                        </>
-                      ) : needsApproval ? (
-                        "Approve Tokens First"
-                      ) : (
-                        `Pay ${calculateTotal().toFixed(2)} UTICK`
-                      )}
-                    </Button>
-                    
-                    <div className="space-y-2">
-                      <Button
-                        variant="outline"
-                        onClick={runPaymentDiagnostic}
-                        disabled={paymentStatus === "processing"}
-                        className="w-full"
-                      >
-                        <AlertCircle className="mr-2 h-4 w-4" />
-                        Diagnose Payment Issues
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => checkTokenStatus(userId)}
-                        disabled={paymentStatus === "processing"}
-                        className="w-full"
-                      >
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Refresh Token Status
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => setNeedsApproval(true)}
-                        disabled={paymentStatus === "processing"}
-                        className="w-full"
-                      >
-                        <Settings className="mr-2 h-4 w-4" />
-                        Force Show Approval Button
-                      </Button>
-                    </div>
                   </div>
 
                   {transactionHash && (

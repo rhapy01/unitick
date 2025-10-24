@@ -117,7 +117,7 @@ export function ListingsGrid({ listings, isLoading, onAddToCart, onRemoveFromCar
                     <div
                       key={index}
                       className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentIndex ? 'bg-white' : 'bg-white/50'
+                        index === currentIndex ? 'bg-primary' : 'bg-primary/50'
                       }`}
                     />
                   ))}

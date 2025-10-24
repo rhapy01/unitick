@@ -13,16 +13,10 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   Plus, 
-  Package, 
-  DollarSign, 
-  TrendingUp, 
-  Award, 
-  Star, 
-  Heart, 
-  MessageSquare,
   Wallet,
   AlertTriangle,
-  Clock
+  Clock,
+  Star
 } from "lucide-react"
 
 interface VendorStats {
@@ -332,9 +326,8 @@ export default function VendorDashboardPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalBookings || 0}</div>
@@ -342,9 +335,8 @@ export default function VendorDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${stats?.totalRevenue.toFixed(2) || "0.00"}</div>
@@ -352,9 +344,8 @@ export default function VendorDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Active Listings</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.activeListings || 0}</div>
@@ -362,9 +353,8 @@ export default function VendorDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Unila Miles</CardTitle>
-              <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalMiles || 0}</div>
@@ -373,9 +363,8 @@ export default function VendorDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
-              <Star className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.averageRating ? stats.averageRating.toFixed(1) : "N/A"}</div>
@@ -384,9 +373,8 @@ export default function VendorDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Likes</CardTitle>
-              <Heart className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalLikes || 0}</div>
@@ -394,9 +382,8 @@ export default function VendorDashboardPage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Feedback</CardTitle>
-              <MessageSquare className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalReviews || 0}</div>

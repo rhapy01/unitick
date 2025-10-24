@@ -27,7 +27,7 @@ export function ServiceCard({ listing }: ServiceCardProps) {
             </Badge>
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-            <MapPin className="h-4 w-4" />
+            <MapPin className="h-4 w-4 text-muted-foreground" />
             <span className="line-clamp-1">{listing.location}</span>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{listing.description}</p>

@@ -312,87 +312,132 @@ export default function NewListingPage() {
     }
   }
 
-  // Category-specific form components
-  const renderCategorySpecificForm = () => {
+  // Consolidated form components
+  const renderConsolidatedForm = () => {
     if (!serviceType) return null
 
     const updateCategoryField = (field: string, value: any) => {
       setCategoryFields(prev => ({ ...prev, [field]: value }))
     }
 
+    const getServiceIcon = () => {
     switch (serviceType) {
-      case 'accommodation':
+        case 'accommodation': return <Bed className="h-5 w-5 text-accent" />
+        case 'cinema': return <Film className="h-5 w-5 text-accent" />
+        case 'tour': return <Compass className="h-5 w-5 text-accent" />
+        case 'event': return <CalendarIcon className="h-5 w-5 text-accent" />
+        case 'car_hire': return <Car className="h-5 w-5 text-accent" />
+        default: return <Settings className="h-5 w-5 text-accent" />
+      }
+    }
+
+    const getServiceTitle = () => {
+      switch (serviceType) {
+        case 'accommodation': return 'Hotel / Hospitality Details'
+        case 'cinema': return 'Cinema / Movie Details'
+        case 'tour': return 'Safari / Tour Details'
+        case 'event': return 'Event / Conference Details'
+        case 'car_hire': return 'Car Hire / Rental Details'
+        default: return 'Service Details'
+      }
+    }
+
   return (
           <Card className="border-border/50 shadow-lg">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Bed className="h-5 w-5 text-primary" />
+              {getServiceIcon()}
                 </div>
                 <div>
-                  <CardTitle className="text-xl">Hotel / Hospitality Details</CardTitle>
-                  <CardDescription>Specific information for accommodation listings</CardDescription>
+              <CardTitle className="text-xl">{getServiceTitle()}</CardTitle>
+              <CardDescription>Essential information for your {SERVICE_TYPES[serviceType]} listing</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+        <CardContent className="space-y-6">
+          {/* Service Provider Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-accent" />
+              Service Provider Details
+            </h3>
+            <div className="grid gap-3">
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Room Types Available</Label>
-                <Textarea
-                  placeholder="e.g., Standard Room, Deluxe Suite, Presidential Suite"
-                  value={categoryFields.roomTypes || ''}
-                  onChange={(e) => updateCategoryField('roomTypes', e.target.value)}
+                <Label className="text-sm font-medium">Provider Name</Label>
+                <Input
+                  placeholder={
+                    serviceType === 'cinema' ? "e.g., Century Cinema, IMAX Theater" :
+                    serviceType === 'event' ? "e.g., Tech Conference Ltd, Event Management Co" :
+                    serviceType === 'car_hire' ? "e.g., City Car Rental, Airport Rentals" :
+                    "e.g., Hotel Name, Tour Company"
+                  }
+                  value={categoryFields.providerName || ''}
+                  onChange={(e) => updateCategoryField('providerName', e.target.value)}
                 />
               </div>
+            </div>
+              </div>
               
+          {/* Location Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-accent" />
+              Location Details
+            </h3>
+            <div className="grid gap-3">
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Price Per Night (USD)</Label>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Standard Room</Label>
+                <Label className="text-sm font-medium">Primary Location</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type="number"
-                        placeholder="0.00"
+                    placeholder="Main address or venue location"
                         className="pl-10"
-                        value={categoryFields.standardPrice || ''}
-                        onChange={(e) => updateCategoryField('standardPrice', e.target.value)}
+                    value={categoryFields.primaryLocation || ''}
+                    onChange={(e) => updateCategoryField('primaryLocation', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Deluxe Room</Label>
+              
+              {(serviceType === 'tour' || serviceType === 'car_hire') && (
+                <>
+                  <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Pickup Location</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        type="number"
-                        placeholder="0.00"
+                        placeholder="e.g., Hotel lobby, Airport, City center"
                         className="pl-10"
-                        value={categoryFields.deluxePrice || ''}
-                        onChange={(e) => updateCategoryField('deluxePrice', e.target.value)}
+                        value={categoryFields.pickupLocation || ''}
+                        onChange={(e) => updateCategoryField('pickupLocation', e.target.value)}
                       />
                     </div>
                   </div>
-                </div>
-              </div>
-
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Max Guests Per Room</Label>
+                    <Label className="text-sm font-medium">Drop-off Location</Label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    type="number"
-                    placeholder="Maximum guests"
+                        placeholder="e.g., Same as pickup, Different location"
                     className="pl-10"
-                    value={categoryFields.maxGuests || ''}
-                    onChange={(e) => updateCategoryField('maxGuests', e.target.value)}
+                        value={categoryFields.dropoffLocation || ''}
+                        onChange={(e) => updateCategoryField('dropoffLocation', e.target.value)}
                   />
+                    </div>
+                  </div>
+                </>
+              )}
                 </div>
               </div>
 
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Check-in & Check-out Times</Label>
+          {/* Schedule & Duration */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Clock className="h-4 w-4 text-accent" />
+              Schedule & Duration
+            </h3>
+            <div className="grid gap-3">
+              {serviceType === 'accommodation' && (
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Check-in Time</Label>
@@ -411,174 +456,36 @@ export default function NewListingPage() {
                     />
                   </div>
                 </div>
-              </div>
+              )}
 
+              {serviceType === 'cinema' && (
+                <>
               <div className="grid gap-2">
-                <Label className="text-sm font-medium">Number of Rooms Available</Label>
+                    <Label className="text-sm font-medium">Showtimes</Label>
+                    <Textarea
+                      placeholder="e.g., 2:00 PM, 5:30 PM, 8:45 PM"
+                      value={categoryFields.showtimes || ''}
+                      onChange={(e) => updateCategoryField('showtimes', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">Separate multiple showtimes with commas</p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Movie Duration (minutes)</Label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="number"
-                    placeholder="Total rooms"
+                        placeholder="120"
                     className="pl-10"
-                    value={categoryFields.totalRooms || ''}
-                    onChange={(e) => updateCategoryField('totalRooms', e.target.value)}
+                        value={categoryFields.movieDuration || ''}
+                        onChange={(e) => updateCategoryField('movieDuration', e.target.value)}
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )
+                </>
+              )}
 
-      case 'cinema':
-        return (
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Film className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Cinema / Movie Details</CardTitle>
-                  <CardDescription>Specific information for movie listings</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Cinema Name</Label>
-                <Input
-                  placeholder="e.g., Century Cinema, IMAX Theater"
-                  value={categoryFields.cinemaName || ''}
-                  onChange={(e) => updateCategoryField('cinemaName', e.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Hall / Screen Number</Label>
-                <Input
-                  placeholder="e.g., Hall A, Screen 3"
-                  value={categoryFields.hallNumber || ''}
-                  onChange={(e) => updateCategoryField('hallNumber', e.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Movie Duration (minutes)</Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="120"
-                    className="pl-10"
-                    value={categoryFields.movieDuration || ''}
-                    onChange={(e) => updateCategoryField('movieDuration', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Age Rating</Label>
-                <Select value={categoryFields.ageRating || ''} onValueChange={(value) => updateCategoryField('ageRating', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select age rating" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="G">G - General Audiences</SelectItem>
-                    <SelectItem value="PG">PG - Parental Guidance</SelectItem>
-                    <SelectItem value="PG-13">PG-13 - Parents Strongly Cautioned</SelectItem>
-                    <SelectItem value="R">R - Restricted</SelectItem>
-                    <SelectItem value="NC-17">NC-17 - Adults Only</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Showtimes</Label>
-                <Textarea
-                  placeholder="e.g., 2:00 PM, 5:30 PM, 8:45 PM"
-                  value={categoryFields.showtimes || ''}
-                  onChange={(e) => updateCategoryField('showtimes', e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">Separate multiple showtimes with commas</p>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Seats Available Per Show</Label>
-                <div className="relative">
-                  <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="Total seats"
-                    className="pl-10"
-                    value={categoryFields.seatsPerShow || ''}
-                    onChange={(e) => updateCategoryField('seatsPerShow', e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-
-      case 'tour':
-        return (
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Compass className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Safari / Tour Details</CardTitle>
-                  <CardDescription>Specific information for tour listings</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Tour Type</Label>
-                <Select value={categoryFields.tourType || ''} onValueChange={(value) => updateCategoryField('tourType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select tour type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="group">Group Tour</SelectItem>
-                    <SelectItem value="private">Private Tour</SelectItem>
-                    <SelectItem value="day-trip">Day Trip</SelectItem>
-                    <SelectItem value="multi-day">Multi-day Tour</SelectItem>
-                    <SelectItem value="safari">Safari</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Pickup Location</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="e.g., Hotel lobby, Airport, City center"
-                    className="pl-10"
-                    value={categoryFields.pickupLocation || ''}
-                    onChange={(e) => updateCategoryField('pickupLocation', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Drop-off Location</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="e.g., Same as pickup, Different location"
-                    className="pl-10"
-                    value={categoryFields.dropoffLocation || ''}
-                    onChange={(e) => updateCategoryField('dropoffLocation', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Tour Duration</Label>
+              {serviceType === 'tour' && (
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Start Time</Label>
@@ -587,19 +494,251 @@ export default function NewListingPage() {
                       value={categoryFields.tourStartTime || ''}
                       onChange={(e) => updateCategoryField('tourStartTime', e.target.value)}
                     />
-                  </div>
+                </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Duration (hours)</Label>
-                    <Input
+                <Input
                       type="number"
                       placeholder="8"
                       value={categoryFields.tourDuration || ''}
                       onChange={(e) => updateCategoryField('tourDuration', e.target.value)}
-                    />
-                  </div>
+                />
+              </div>
+                </div>
+              )}
+
+              {serviceType === 'event' && (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Event Date</Label>
+                <Input
+                      type="date"
+                      value={categoryFields.eventDate || ''}
+                      onChange={(e) => updateCategoryField('eventDate', e.target.value)}
+                />
+              </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Start Time</Label>
+                  <Input
+                      type="time"
+                      value={categoryFields.eventTime || ''}
+                      onChange={(e) => updateCategoryField('eventTime', e.target.value)}
+                  />
+                </div>
+              </div>
+              )}
+
+              {serviceType === 'car_hire' && (
+              <div className="grid gap-2">
+                  <Label className="text-sm font-medium">Minimum Rental Duration</Label>
+                  <Select value={categoryFields.minRentalDuration || ''} onValueChange={(value) => updateCategoryField('minRentalDuration', value)}>
+                  <SelectTrigger>
+                      <SelectValue placeholder="Select minimum duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="1">1 Day</SelectItem>
+                      <SelectItem value="3">3 Days</SelectItem>
+                      <SelectItem value="7">1 Week</SelectItem>
+                      <SelectItem value="30">1 Month</SelectItem>
+                  </SelectContent>
+                </Select>
+                </div>
+              )}
+            </div>
+              </div>
+
+          {/* Capacity & Availability */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Users className="h-4 w-4 text-accent" />
+              Capacity & Availability
+            </h3>
+            <div className="grid gap-3">
+              <div className="grid gap-2">
+                <Label className="text-sm font-medium">
+                  {serviceType === 'accommodation' ? 'Max Guests Per Room' :
+                   serviceType === 'cinema' ? 'Seats Available Per Show' :
+                   serviceType === 'tour' ? 'Maximum Group Size' :
+                   serviceType === 'event' ? 'Maximum Attendees' :
+                   'Maximum Passengers'}
+                </Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    placeholder="Maximum capacity"
+                    className="pl-10"
+                    value={categoryFields.maxCapacity || ''}
+                    onChange={(e) => updateCategoryField('maxCapacity', e.target.value)}
+                  />
                 </div>
               </div>
 
+              {(serviceType === 'accommodation' || serviceType === 'car_hire') && (
+              <div className="grid gap-2">
+                  <Label className="text-sm font-medium">
+                    {serviceType === 'accommodation' ? 'Number of Rooms Available' : 'Number of Cars Available'}
+                  </Label>
+                <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                      placeholder="Total units"
+                    className="pl-10"
+                      value={categoryFields.totalUnits || ''}
+                      onChange={(e) => updateCategoryField('totalUnits', e.target.value)}
+                  />
+                </div>
+              </div>
+              )}
+            </div>
+          </div>
+
+          {/* Pricing Structure */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-accent" />
+              Pricing Structure
+            </h3>
+            <div className="grid gap-3">
+              {serviceType === 'accommodation' && (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Standard Room Price (USD)</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        className="pl-10"
+                        value={categoryFields.standardPrice || ''}
+                        onChange={(e) => updateCategoryField('standardPrice', e.target.value)}
+                      />
+                </div>
+                </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Deluxe Room Price (USD)</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        className="pl-10"
+                        value={categoryFields.deluxePrice || ''}
+                        onChange={(e) => updateCategoryField('deluxePrice', e.target.value)}
+                      />
+              </div>
+              </div>
+                </div>
+              )}
+
+              {serviceType === 'car_hire' && (
+                <>
+              <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Price Per Day (USD)</Label>
+                <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                        type="number"
+                        placeholder="0.00"
+                    className="pl-10"
+                        value={categoryFields.pricePerDay || ''}
+                        onChange={(e) => updateCategoryField('pricePerDay', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Security Deposit Required (USD)</Label>
+                <div className="relative">
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                        type="number"
+                        placeholder="0.00"
+                    className="pl-10"
+                        value={categoryFields.securityDeposit || ''}
+                        onChange={(e) => updateCategoryField('securityDeposit', e.target.value)}
+                  />
+                </div>
+              </div>
+                </>
+              )}
+
+              {serviceType === 'event' && (
+              <div className="grid gap-2">
+                  <Label className="text-sm font-medium">Ticket Types & Prices</Label>
+                  <Textarea
+                    placeholder="e.g., Early Bird: $50, Regular: $75, VIP: $150"
+                    value={categoryFields.ticketTypes || ''}
+                    onChange={(e) => updateCategoryField('ticketTypes', e.target.value)}
+                    />
+                  </div>
+              )}
+            </div>
+          </div>
+
+          {/* Service-Specific Details */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Settings className="h-4 w-4 text-accent" />
+              Service-Specific Details
+            </h3>
+            <div className="grid gap-3">
+              {serviceType === 'accommodation' && (
+                <div className="grid gap-2">
+                  <Label className="text-sm font-medium">Room Types Available</Label>
+                  <Textarea
+                    placeholder="e.g., Standard Room, Deluxe Suite, Presidential Suite"
+                    value={categoryFields.roomTypes || ''}
+                    onChange={(e) => updateCategoryField('roomTypes', e.target.value)}
+                  />
+                </div>
+              )}
+
+              {serviceType === 'cinema' && (
+                <>
+                  <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Hall / Screen Number</Label>
+                    <Input
+                      placeholder="e.g., Hall A, Screen 3"
+                      value={categoryFields.hallNumber || ''}
+                      onChange={(e) => updateCategoryField('hallNumber', e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Age Rating</Label>
+                    <Select value={categoryFields.ageRating || ''} onValueChange={(value) => updateCategoryField('ageRating', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select age rating" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="G">G - General Audiences</SelectItem>
+                        <SelectItem value="PG">PG - Parental Guidance</SelectItem>
+                        <SelectItem value="PG-13">PG-13 - Parents Strongly Cautioned</SelectItem>
+                        <SelectItem value="R">R - Restricted</SelectItem>
+                        <SelectItem value="NC-17">NC-17 - Adults Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                </div>
+                </>
+              )}
+
+              {serviceType === 'tour' && (
+                <>
+                  <div className="grid gap-2">
+                    <Label className="text-sm font-medium">Tour Type</Label>
+                    <Select value={categoryFields.tourType || ''} onValueChange={(value) => updateCategoryField('tourType', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tour type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="group">Group Tour</SelectItem>
+                        <SelectItem value="private">Private Tour</SelectItem>
+                        <SelectItem value="day-trip">Day Trip</SelectItem>
+                        <SelectItem value="multi-day">Multi-day Tour</SelectItem>
+                        <SelectItem value="safari">Safari</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">What's Included</Label>
                 <Textarea
@@ -608,7 +747,6 @@ export default function NewListingPage() {
                   onChange={(e) => updateCategoryField('includedItems', e.target.value)}
                 />
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">What to Bring</Label>
                 <Textarea
@@ -617,21 +755,6 @@ export default function NewListingPage() {
                   onChange={(e) => updateCategoryField('whatToBring', e.target.value)}
                 />
               </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Maximum Group Size</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="Maximum people"
-                    className="pl-10"
-                    value={categoryFields.maxGroupSize || ''}
-                    onChange={(e) => updateCategoryField('maxGroupSize', e.target.value)}
-                  />
-                </div>
-              </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Guide Languages</Label>
                 <Input
@@ -641,34 +764,11 @@ export default function NewListingPage() {
                 />
                 <p className="text-xs text-muted-foreground">Separate languages with commas</p>
               </div>
-            </CardContent>
-          </Card>
-        )
+                </>
+              )}
 
-      case 'event':
-        return (
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <CalendarIcon className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Event / Conference Details</CardTitle>
-                  <CardDescription>Specific information for event listings</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Event Organizer</Label>
-                <Input
-                  placeholder="e.g., Tech Conference Ltd, Event Management Co"
-                  value={categoryFields.organizer || ''}
-                  onChange={(e) => updateCategoryField('organizer', e.target.value)}
-                />
-              </div>
-
+              {serviceType === 'event' && (
+                <>
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Event Type</Label>
                 <Select value={categoryFields.eventType || ''} onValueChange={(value) => updateCategoryField('eventType', value)}>
@@ -685,38 +785,6 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Event Date & Time</Label>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Event Date</Label>
-                    <Input
-                      type="date"
-                      value={categoryFields.eventDate || ''}
-                      onChange={(e) => updateCategoryField('eventDate', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Start Time</Label>
-                    <Input
-                      type="time"
-                      value={categoryFields.eventTime || ''}
-                      onChange={(e) => updateCategoryField('eventTime', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Ticket Types & Prices</Label>
-                <Textarea
-                  placeholder="e.g., Early Bird: $50, Regular: $75, VIP: $150"
-                  value={categoryFields.ticketTypes || ''}
-                  onChange={(e) => updateCategoryField('ticketTypes', e.target.value)}
-                />
-              </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Method of Entry</Label>
                 <Select value={categoryFields.entryMethod || ''} onValueChange={(value) => updateCategoryField('entryMethod', value)}>
@@ -731,7 +799,6 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Speakers / Performers</Label>
                 <Textarea
@@ -740,7 +807,6 @@ export default function NewListingPage() {
                   onChange={(e) => updateCategoryField('speakers', e.target.value)}
                 />
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Event Agenda / Schedule</Label>
                 <Textarea
@@ -749,25 +815,11 @@ export default function NewListingPage() {
                   onChange={(e) => updateCategoryField('agenda', e.target.value)}
                 />
               </div>
-            </CardContent>
-          </Card>
-        )
+                </>
+              )}
 
-      case 'car_hire':
-        return (
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Car className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Car Hire / Rental Details</CardTitle>
-                  <CardDescription>Specific information for car rental listings</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
+              {serviceType === 'car_hire' && (
+                <>
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Car Make & Model</Label>
                 <Input
@@ -776,7 +828,6 @@ export default function NewListingPage() {
                   onChange={(e) => updateCategoryField('carModel', e.target.value)}
                 />
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Car Type</Label>
                 <Select value={categoryFields.carType || ''} onValueChange={(value) => updateCategoryField('carType', value)}>
@@ -794,62 +845,6 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Price Per Day (USD)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    className="pl-10"
-                    value={categoryFields.pricePerDay || ''}
-                    onChange={(e) => updateCategoryField('pricePerDay', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Minimum Rental Duration</Label>
-                <Select value={categoryFields.minRentalDuration || ''} onValueChange={(value) => updateCategoryField('minRentalDuration', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select minimum duration" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Day</SelectItem>
-                    <SelectItem value="3">3 Days</SelectItem>
-                    <SelectItem value="7">1 Week</SelectItem>
-                    <SelectItem value="30">1 Month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Pickup Location</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="e.g., Airport, Downtown, Hotel"
-                    className="pl-10"
-                    value={categoryFields.pickupLocation || ''}
-                    onChange={(e) => updateCategoryField('pickupLocation', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Drop-off Location</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="e.g., Same as pickup, Different location"
-                    className="pl-10"
-                    value={categoryFields.dropoffLocation || ''}
-                    onChange={(e) => updateCategoryField('dropoffLocation', e.target.value)}
-                  />
-                </div>
-              </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Driver Included?</Label>
                 <Select value={categoryFields.driverIncluded || ''} onValueChange={(value) => updateCategoryField('driverIncluded', value)}>
@@ -863,7 +858,6 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Fuel Policy</Label>
                 <Select value={categoryFields.fuelPolicy || ''} onValueChange={(value) => updateCategoryField('fuelPolicy', value)}>
@@ -877,7 +871,6 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Insurance Included?</Label>
                 <Select value={categoryFields.insuranceIncluded || ''} onValueChange={(value) => updateCategoryField('insuranceIncluded', value)}>
@@ -891,7 +884,6 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">License Required</Label>
                 <Select value={categoryFields.licenseRequired || ''} onValueChange={(value) => updateCategoryField('licenseRequired', value)}>
@@ -905,41 +897,13 @@ export default function NewListingPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Security Deposit Required (USD)</Label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    className="pl-10"
-                    value={categoryFields.securityDeposit || ''}
-                    onChange={(e) => updateCategoryField('securityDeposit', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Number of Vehicles Available</Label>
-                <div className="relative">
-                  <Car className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    placeholder="Total vehicles"
-                    className="pl-10"
-                    value={categoryFields.totalVehicles || ''}
-                    onChange={(e) => updateCategoryField('totalVehicles', e.target.value)}
-                  />
+                </>
+              )}
                 </div>
               </div>
             </CardContent>
           </Card>
         )
-
-      default:
-        return null
-    }
   }
 
   return (
@@ -976,7 +940,7 @@ export default function NewListingPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
+                    <FileText className="h-5 w-5 text-accent" />
                   </div>
                 <div>
                     <CardTitle className="text-xl">Basic Information</CardTitle>
@@ -1053,7 +1017,7 @@ export default function NewListingPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <ImageIcon className="h-5 w-5 text-primary" />
+                    <ImageIcon className="h-5 w-5 text-accent" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
@@ -1079,7 +1043,7 @@ export default function NewListingPage() {
                       {images.length === 0 ? (
                       <div className="text-center py-8">
                         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                          <Upload className="h-8 w-8 text-primary" />
+                          <Upload className="h-8 w-8 text-accent" />
                         </div>
                         <p className="text-base font-medium mb-1">
                             {uploadingImages ? "Uploading..." : "Click to upload images"}
@@ -1150,7 +1114,7 @@ export default function NewListingPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <MapPin className="h-5 w-5 text-primary" />
+                    <MapPin className="h-5 w-5 text-accent" />
                   </div>
                 <div>
                     <CardTitle className="text-xl">Location & Pricing</CardTitle>
@@ -1254,7 +1218,7 @@ export default function NewListingPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <CalendarIcon className="h-5 w-5 text-primary" />
+                    <CalendarIcon className="h-5 w-5 text-accent" />
                   </div>
                 <div>
                     <CardTitle className="text-xl">Availability</CardTitle>
@@ -1282,11 +1246,11 @@ export default function NewListingPage() {
                           : `${availableDates.length} date${availableDates.length > 1 ? "s" : ""} selected`}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent align="start" className="w-auto p-0">
-                            <div className="p-3">
+                          <PopoverContent align="start" className="w-auto p-0 bg-black/90 backdrop-blur-xl border border-white/20 shadow-2xl z-[9999]">
+                            <div className="p-4">
                               <Calendar
                                 mode="multiple"
-                          selected={availableDates.map((d) => new Date(d))}
+                                selected={availableDates.map((d) => new Date(d))}
                                 onSelect={(dates) => {
                                   const next = (dates || [])
                                     .map((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()))
@@ -1295,14 +1259,15 @@ export default function NewListingPage() {
                                 }}
                                 disabled={{ before: new Date(new Date().toDateString()) }}
                               />
-                        <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t">
+                              <div className="flex items-center justify-end gap-2 mt-4 pt-4 border-t border-white/20">
                                 <Button
                                   type="button"
                                   variant="ghost"
-                            size="sm"
+                                  size="sm"
                                   onClick={() => setAvailableDates([])}
+                                  className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
                                 >
-                            Clear All
+                                  Clear All
                                 </Button>
                               </div>
                             </div>
@@ -1415,14 +1380,14 @@ export default function NewListingPage() {
             </Card>
 
             {/* Category-Specific Form */}
-            {renderCategorySpecificForm()}
+            {renderConsolidatedForm()}
 
             {/* Additional Settings */}
             <Card className="border-border/50 shadow-lg">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Settings className="h-5 w-5 text-primary" />
+                    <Settings className="h-5 w-5 text-accent" />
                   </div>
                 <div>
                     <CardTitle className="text-xl">Additional Settings</CardTitle>
@@ -1516,7 +1481,7 @@ export default function NewListingPage() {
           {/* Footer Info */}
           <div className="mt-8 text-center space-y-2">
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <Sparkles className="h-4 w-4 text-accent" />
               Earn 20 Unila Miles when you create your first listing!
             </p>
           </div>

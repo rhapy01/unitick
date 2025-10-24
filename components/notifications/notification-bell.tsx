@@ -79,12 +79,12 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 bg-white border-2 border-gray-200 shadow-lg" align="end">
+      <DropdownMenuContent className="w-80 bg-background border-2 border-border shadow-lg backdrop-blur-0" align="end" style={{ backgroundColor: 'rgba(0, 0, 0, 1)' }}>
         <DropdownMenuHeader>
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-900">Notifications</span>
+            <span className="font-semibold text-foreground">Notifications</span>
             {unreadCount > 0 && (
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 {unreadCount} unread
               </span>
             )}

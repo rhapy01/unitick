@@ -172,12 +172,12 @@ export default function SignupPage() {
                       <RadioGroupItem value="user" id="user" className="peer sr-only" />
                       <Label
                         htmlFor="user"
-                        className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                        className="flex flex-col items-center justify-between rounded-lg border-2 border-pink-200 dark:border-blue-800 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-blue-950/30 dark:to-blue-900/30 p-4 hover:from-pink-100 hover:to-rose-200 dark:hover:from-blue-900/40 dark:hover:to-blue-800/40 hover:text-pink-900 dark:hover:text-blue-100 peer-data-[state=checked]:border-pink-500 dark:peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-gradient-to-br peer-data-[state=checked]:from-pink-200 peer-data-[state=checked]:to-rose-300 dark:peer-data-[state=checked]:from-blue-800/50 dark:peer-data-[state=checked]:to-blue-700/50 cursor-pointer transition-all"
                       >
-                        <ShoppingBag className="mb-2 h-6 w-6" />
+                        <ShoppingBag className="mb-2 h-6 w-6 text-pink-600 dark:text-blue-400" />
                         <div className="text-center">
-                          <div className="font-semibold">Customer</div>
-                          <div className="text-xs text-muted-foreground mt-1">Book services & tickets</div>
+                          <div className="font-semibold text-pink-900 dark:text-blue-100">Customer</div>
+                          <div className="text-xs text-pink-700 dark:text-blue-300 mt-1">Book services & tickets</div>
                         </div>
                       </Label>
                     </div>
@@ -185,12 +185,12 @@ export default function SignupPage() {
                       <RadioGroupItem value="vendor" id="vendor" className="peer sr-only" />
                       <Label
                         htmlFor="vendor"
-                        className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
+                        className="flex flex-col items-center justify-between rounded-lg border-2 border-pink-200 dark:border-blue-800 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-blue-950/30 dark:to-blue-900/30 p-4 hover:from-pink-100 hover:to-rose-200 dark:hover:from-blue-900/40 dark:hover:to-blue-800/40 hover:text-pink-900 dark:hover:text-blue-100 peer-data-[state=checked]:border-pink-500 dark:peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-gradient-to-br peer-data-[state=checked]:from-pink-200 peer-data-[state=checked]:to-rose-300 dark:peer-data-[state=checked]:from-blue-800/50 dark:peer-data-[state=checked]:to-blue-700/50 cursor-pointer transition-all"
                       >
-                        <Store className="mb-2 h-6 w-6" />
+                        <Store className="mb-2 h-6 w-6 text-pink-600 dark:text-blue-400" />
                         <div className="text-center">
-                          <div className="font-semibold">Vendor</div>
-                          <div className="text-xs text-muted-foreground mt-1">List services & sell tickets</div>
+                          <div className="font-semibold text-pink-900 dark:text-blue-100">Vendor</div>
+                          <div className="text-xs text-pink-700 dark:text-blue-300 mt-1">List services & sell tickets</div>
                         </div>
                       </Label>
                     </div>
@@ -230,18 +230,18 @@ export default function SignupPage() {
                 )}
                 
                 {/* Wallet Creation Notice */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200/50 dark:border-blue-800/50 rounded-xl p-4">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl" />
+                <div className="relative overflow-hidden bg-gradient-to-br from-pink-100 via-rose-100 to-pink-200 dark:from-blue-950/30 dark:to-blue-900/30 border border-pink-200/50 dark:border-blue-800/50 rounded-xl p-4">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-pink-400/20 dark:bg-blue-400/20 rounded-full blur-3xl" />
                   <div className="relative flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 dark:from-blue-500 dark:to-blue-600 flex items-center justify-center shadow-lg">
                       <Wallet className="h-5 w-5 text-white" />
                     </div>
                     <div className="space-y-2 flex-1">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                      <h4 className="font-semibold text-pink-900 dark:text-blue-100 flex items-center gap-2">
                         Easy Wallet Setup
                         <Sparkles className="h-4 w-4 text-yellow-500" />
                       </h4>
-                      <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1.5">
+                      <div className="text-sm text-pink-800 dark:text-blue-200 space-y-1.5">
                         <div className="flex items-start gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
                           <span>Create your wallet with one click after signup</span>

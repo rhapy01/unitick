@@ -14,14 +14,6 @@ const publicClient = createPublicClient({
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json()
-
-    if (!password) {
-      return NextResponse.json(
-        { error: 'Password is required to access your wallet for claiming faucet tokens' },
-        { status: 400 }
-      )
-    }
 
     // Verify user is authenticated
     const supabase = await createClient()
@@ -48,8 +40,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Since we cleaned the database, we need to create a wallet first
     // Get the secure wallet for the user
+    // Note: Password is collected for security logging but wallet decryption uses user ID + email
     let secureWallet
     try {
       secureWallet = await getSecureWalletForUser(user.id, profile.email)
@@ -147,14 +139,52 @@ export async function POST(request: NextRequest) {
           p_success: true
         })
         
+        // Helper function to recursively convert BigInt values to strings
+        const convertBigIntToString = (obj: any): any => {
+          if (obj === null || obj === undefined) {
+            return obj
+          }
+          
+          if (typeof obj === 'bigint') {
+            return obj.toString()
+          }
+          
+          if (Array.isArray(obj)) {
+            return obj.map(convertBigIntToString)
+          }
+          
+          if (typeof obj === 'object') {
+            const converted: any = {}
+            for (const [key, value] of Object.entries(obj)) {
+              converted[key] = convertBigIntToString(value)
+            }
+            return converted
+          }
+          
+          return obj
+        }
+
+        // Convert all BigInt values in receipt to strings for JSON serialization
+        const serializedReceipt = convertBigIntToString(receipt)
+
         return NextResponse.json({
           success: true,
           transactionHash: hash,
-          receipt,
+          receipt: serializedReceipt,
+          message: 'Faucet tokens claimed successfully!'
         })
       } else {
+        // Log failed transaction
+        await supabase.rpc('log_wallet_security_event', {
+          p_user_id: user.id,
+          p_action: 'faucet_claim_failed',
+          p_wallet_address: walletAddress,
+          p_success: false,
+          p_error_message: 'Transaction failed on blockchain'
+        })
+        
         return NextResponse.json(
-          { error: 'Transaction failed' },
+          { error: 'Transaction failed on blockchain' },
           { status: 500 }
         )
       }
@@ -168,7 +198,7 @@ export async function POST(request: NextRequest) {
             { 
               error: 'Insufficient ETH for gas fees. Please add more ETH to your wallet.',
               details: txError.message,
-              walletAddress: walletData.address
+              walletAddress: walletAddress
             },
             { status: 400 }
           )

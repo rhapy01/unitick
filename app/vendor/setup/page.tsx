@@ -137,7 +137,7 @@ export default function VendorSetupPage() {
           {/* Header Section */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl gradient-flow gradient-glow mb-6 shadow-2xl">
-              <Store className="h-10 w-10 text-white" />
+              <Store className="h-10 w-10 text-primary" />
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold gradient-text mb-4 leading-tight">
               Setup Vendor Profile
@@ -153,7 +153,7 @@ export default function VendorSetupPage() {
               <CardHeader>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl gradient-accent flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-white" />
+                    <Building2 className="h-6 w-6 text-primary" />
                   </div>
                   <div>
                     <CardTitle className="text-xl">Business Information</CardTitle>
@@ -205,7 +205,7 @@ export default function VendorSetupPage() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-                    <Grid3x3 className="h-5 w-5 text-white" />
+                    <Grid3x3 className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
@@ -356,7 +356,7 @@ export default function VendorSetupPage() {
 
                 <div className="grid gap-2">
                   <Label htmlFor="walletAddress" className="text-sm font-medium">
-                    Crypto Wallet Address <span className="text-destructive">*</span>
+                    Payment Wallet Address <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -369,6 +369,9 @@ export default function VendorSetupPage() {
                       required
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    This wallet will receive payments from orders. Must be an EVM address.
+                  </p>
                   
                   {/* External Wallet Encouragement */}
                   <div className="bg-green-50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-800/50 rounded-lg p-4 mt-2">
@@ -381,10 +384,11 @@ export default function VendorSetupPage() {
                           💡 Recommended: Use External Wallet
                         </p>
                         <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
-                          <p>• <strong>External wallets</strong> (MetaMask, Trust Wallet, etc.) are recommended for receiving payments</p>
-                          <p>• You have full control and can easily manage your funds</p>
-                          <p>• Better security and flexibility for business operations</p>
-                          <p>• You can also create an in-app wallet for platform features</p>
+                          <p>• <strong>MetaMask, Trust Wallet, Coinbase Wallet</strong> - More secure and widely supported</p>
+                          <p>• <strong>Hardware wallets</strong> - Ledger, Trezor for maximum security</p>
+                          <p>• <strong>External wallets</strong> give you full control over your private keys</p>
+                          <p>• <strong>Better compatibility</strong> with DeFi protocols and other platforms</p>
+                          <p>• <strong>Internal wallet is in Beta</strong> - External wallet recommended for production use</p>
                         </div>
                       </div>
                     </div>
@@ -472,20 +476,20 @@ export default function VendorSetupPage() {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border">
-                <h4 className="font-semibold mb-3 text-gray-800 dark:text-gray-200">Whitelist Application Requirements:</h4>
-                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <div className="bg-background dark:bg-muted rounded-lg p-4 border">
+                <h4 className="font-semibold mb-3 text-foreground">Whitelist Application Requirements:</h4>
+                <div className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-start gap-2">
                     <span className="text-green-600 dark:text-green-400">✓</span>
                     <span>Complete vendor profile (business name, description, contact details)</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-green-600 dark:text-green-400">✓</span>
-                    <span>Provide external wallet address for receiving payments</span>
+                    <span>Provide external wallet address for receiving payments (EVM address)</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-green-600 dark:text-green-400">✓</span>
-                    <span>Create in-app wallet for platform features</span>
+                    <span>Create in-app wallet for platform features (Beta)</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-green-600 dark:text-green-400">✓</span>

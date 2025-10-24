@@ -10,7 +10,7 @@ import type { Profile, Vendor, Listing } from "@/lib/types"
 import { SERVICE_TYPES } from "@/lib/constants"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Users, Package, ShieldCheck, ShieldX, Wallet, Plus, Trash2 } from "lucide-react"
+import { ShieldX, ShieldCheck, Wallet, Plus, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -34,22 +34,23 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
       setIsLoading(true)
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        router.push("/auth/login")
-        return
-      }
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) {
+          router.push("/auth/login")
+          return
+        }
 
-      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+        const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
-      if (!profileData || profileData.role !== "admin") {
-        router.push("/dashboard")
-        return
-      }
+        if (!profileData || profileData.role !== "admin") {
+          router.push("/dashboard")
+          return
+        }
 
-      setProfile(profileData)
+        setProfile(profileData)
 
       const { data: usersData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
 
@@ -74,54 +75,76 @@ export default function AdminDashboardPage() {
 
       setListings(listingsData || [])
 
-      // Fetch whitelisted addresses from contract
+      // Fetch whitelisted addresses from contract (optional feature)
       try {
         const countResponse = await fetch('/api/admin/vendor-whitelist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ action: 'count' })
         })
-        const countData = await countResponse.json()
         
-        if (!countData.success) {
-          throw new Error(countData.error)
-        }
-        
-        const whitelistCount = countData.count
-        const addresses: Address[] = []
+        if (!countResponse.ok) {
+          // If API returns 401, 403, or 500, just skip whitelist feature
+          if (countResponse.status === 401 || countResponse.status === 403 || countResponse.status === 500) {
+            console.log("Whitelist feature not available or blockchain connection failed")
+            setWhitelistedAddresses([])
+          } else {
+            throw new Error(`API returned ${countResponse.status}`)
+          }
+        } else {
+          const countData = await countResponse.json()
+          
+          if (!countData.success) {
+            console.error("Failed to get whitelist count:", countData.error)
+            setWhitelistedAddresses([])
+          } else {
+            const whitelistCount = countData.count
+            const addresses: Address[] = []
 
-        for (let i = 0; i < Number(whitelistCount); i++) {
-          try {
-            const addressResponse = await fetch('/api/admin/vendor-whitelist', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'get', address: i })
-            })
-            const addressData = await addressResponse.json()
-            
-            if (addressData.success && addressData.vendor) {
-              addresses.push(addressData.vendor)
+            for (let i = 0; i < Number(whitelistCount); i++) {
+              try {
+                const addressResponse = await fetch('/api/admin/vendor-whitelist', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ action: 'get', address: i })
+                })
+                
+                if (addressResponse.ok) {
+                  const addressData = await addressResponse.json()
+                  
+                  if (addressData.success && addressData.vendor) {
+                    addresses.push(addressData.vendor)
+                  }
+                }
+              } catch (error) {
+                console.error(`Error fetching whitelist address at index ${i}:`, error)
+              }
             }
-          } catch (error) {
-            console.error(`Error fetching whitelist address at index ${i}:`, error)
+
+            setWhitelistedAddresses(addresses)
           }
         }
-
-        setWhitelistedAddresses(addresses)
       } catch (error) {
         console.error("Error fetching whitelist:", error)
-        toast({
-          title: "Warning",
-          description: "Could not load whitelist data from contract",
-          variant: "destructive",
-        })
+        setWhitelistedAddresses([])
       }
 
       setIsLoading(false)
+      } catch (error) {
+        console.error("Error in fetchData:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load admin data. Please try again.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+      }
     }
 
     fetchData()
-  }, [router, supabase])
+  }, [router, supabase, toast])
 
   const handleToggleVendorVerification = async (vendorId: string, currentStatus: boolean) => {
     const { error } = await supabase.from("vendors").update({ is_verified: !currentStatus }).eq("id", vendorId)
@@ -153,6 +176,7 @@ export default function AdminDashboardPage() {
       const response = await fetch('/api/admin/vendor-whitelist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ action: 'add', address: newWhitelistAddress.trim() })
       })
       const data = await response.json()
@@ -185,6 +209,7 @@ export default function AdminDashboardPage() {
       const response = await fetch('/api/admin/vendor-whitelist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ action: 'remove', address })
       })
       const data = await response.json()
@@ -275,42 +300,27 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold">{users.length}</p>
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Total Users</p>
+                <p className="text-2xl font-bold">{users.length}</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-accent/10">
-                  <ShieldCheck className="h-6 w-6 text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Vendors</p>
-                  <p className="text-2xl font-bold">{vendors.length}</p>
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Total Vendors</p>
+                <p className="text-2xl font-bold">{vendors.length}</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Package className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Listings</p>
-                  <p className="text-2xl font-bold">{listings.length}</p>
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Total Listings</p>
+                <p className="text-2xl font-bold">{listings.length}</p>
               </div>
             </CardContent>
           </Card>
@@ -525,7 +535,7 @@ export default function AdminDashboardPage() {
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Manage which wallet addresses are authorized to receive payments on the blockchain.
-                    Only whitelisted addresses can receive funds through the UnilaBook contract.
+                    Only whitelisted addresses can receive funds through the UniTick contract.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">

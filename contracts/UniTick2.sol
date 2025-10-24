@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
+contract UniTick is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     
     uint256 private _nextTokenId = 1; // Start from 1, 0 reserved for invalid
     uint256 private _nextOrderId = 1;
@@ -89,10 +89,17 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
         address indexed owner
     );
     
+    event FreeTicketCreated(
+        uint256 indexed tokenId,
+        uint256 indexed orderId,
+        address indexed vendor,
+        string serviceName
+    );
+    
     event PlatformFeeUpdated(uint256 newFee);
     event PlatformWalletUpdated(address newWallet);
     
-    constructor(address _platformWallet, address _uniTickToken) ERC721("UnilaBook Tickets", "UNILA") Ownable(msg.sender) {
+    constructor(address _platformWallet, address _uniTickToken) ERC721("UniTick Tickets", "UNITICK") Ownable(msg.sender) {
         require(_platformWallet != address(0), "Invalid platform wallet");
         require(_uniTickToken != address(0), "Invalid UniTick token address");
 
@@ -197,10 +204,11 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     
     /**
      * @dev Create a new order with multiple vendor payments
-     * @param _vendorPayments Array of vendor addresses and amounts
+     * @param _vendorPayments Array of vendor addresses and amounts (amount can be 0 for free tickets)
      * @param _serviceNames Array of service names for each vendor
      * @param _bookingDates Array of booking dates for each service
      * @param _metadata JSON metadata for the order
+     * @notice Supports free tickets (amount = 0) - no token transfer required for free tickets
      */
     function createOrder(
         VendorPayment[] calldata _vendorPayments,
@@ -218,24 +226,26 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < _vendorPayments.length; i++) {
             require(_vendorPayments[i].vendor != address(0), "Invalid vendor address");
-            require(_vendorPayments[i].amount > 0, "Amount must be greater than 0");
+            require(_vendorPayments[i].amount >= 0, "Amount cannot be negative");
 
-            // Security: Check vendor whitelist
+            // Security: Check vendor whitelist (even for free tickets)
             require(whitelistedVendors[_vendorPayments[i].vendor], "Vendor not whitelisted");
 
             // Check for overflow
             uint256 newTotal = totalAmount + _vendorPayments[i].amount;
-            require(newTotal > totalAmount, "Amount overflow");
+            require(newTotal >= totalAmount, "Amount overflow");
             totalAmount = newTotal;
         }
 
         // Calculate platform fee
         uint256 platformFee = (totalAmount * platformFeeBps) / 10000;
         uint256 requiredAmount = totalAmount + platformFee;
-        require(requiredAmount > totalAmount, "Fee calculation overflow");
+        require(requiredAmount >= totalAmount, "Fee calculation overflow");
 
-        // Transfer UniTick tokens from buyer to contract
-        require(uniTickToken.transferFrom(msg.sender, address(this), requiredAmount), "UniTick transfer failed");
+        // Transfer UniTick tokens from buyer to contract (only if amount > 0)
+        if (requiredAmount > 0) {
+            require(uniTickToken.transferFrom(msg.sender, address(this), requiredAmount), "UniTick transfer failed");
+        }
         
         // Get next order ID
         uint256 orderId = _nextOrderId;
@@ -248,7 +258,7 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
             totalAmount: totalAmount,
             platformFee: platformFee,
             timestamp: block.timestamp,
-            isPaid: true,
+            isPaid: true, // Always true since we handle 0 payments
             metadata: _metadata
         });
         
@@ -258,11 +268,13 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
             orderVendorPayments[orderId].push(VendorPayment({
                 vendor: _vendorPayments[i].vendor,
                 amount: _vendorPayments[i].amount,
-                isPaid: true
+                isPaid: true // Always true since we handle 0 payments
             }));
             
-            // Send payment to vendor in UniTick tokens
-            require(uniTickToken.transfer(_vendorPayments[i].vendor, _vendorPayments[i].amount), "Vendor token transfer failed");
+            // Send payment to vendor in UniTick tokens (only if amount > 0)
+            if (_vendorPayments[i].amount > 0) {
+                require(uniTickToken.transfer(_vendorPayments[i].vendor, _vendorPayments[i].amount), "Vendor token transfer failed");
+            }
             
             emit PaymentProcessed(orderId, _vendorPayments[i].vendor, _vendorPayments[i].amount);
             
@@ -284,7 +296,12 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
             _safeMint(msg.sender, tokenId);
             tokenToOrder[tokenId] = orderId;
             
-            emit TicketMinted(tokenId, orderId, msg.sender);
+            // Emit appropriate event based on payment amount
+            if (_vendorPayments[i].amount == 0) {
+                emit FreeTicketCreated(tokenId, orderId, _vendorPayments[i].vendor, _serviceNames[i]);
+            } else {
+                emit TicketMinted(tokenId, orderId, msg.sender);
+            }
             
             // Track vendor orders
             vendorOrders[_vendorPayments[i].vendor].push(orderId);
@@ -368,6 +385,23 @@ contract UnilaBook is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
             }
         }
         revert("Ticket not found");
+    }
+
+    /**
+     * @dev Check if a ticket is free (0 payment)
+     */
+    function isFreeTicket(uint256 _tokenId) external view returns (bool) {
+        require(_tokenId > 0 && _tokenId < _nextTokenId, "Token does not exist");
+        uint256 orderId = tokenToOrder[_tokenId];
+        
+        // Find the booking for this token
+        Booking[] memory bookings = orderBookings[orderId];
+        for (uint256 i = 0; i < bookings.length; i++) {
+            if (bookings[i].tokenId == _tokenId) {
+                return bookings[i].amount == 0;
+            }
+        }
+        return false;
     }
     
     /**

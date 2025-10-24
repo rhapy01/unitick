@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
@@ -32,6 +33,7 @@ interface NotificationListProps {
 }
 
 export function NotificationList({ userId, onClose }: NotificationListProps) {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<NotificationData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
@@ -67,6 +69,89 @@ export function NotificationList({ userId, onClose }: NotificationListProps) {
       )
     }
     setIsMarkingAllRead(false)
+  }
+
+  const handleNotificationClick = async (notification: NotificationData) => {
+    // Mark as read
+    if (!notification.is_read) {
+      await handleMarkAsRead(notification.id)
+    }
+
+    // Navigate based on notification type and data
+    let navigationPath: string | null = null
+
+    switch (notification.type) {
+      case 'gift_received':
+        // Navigate to gift claim page if token is available
+        if (notification.data?.token) {
+          navigationPath = `/gift/claim/${notification.data.token}`
+        } else {
+          navigationPath = '/gift'
+        }
+        break
+      
+      case 'payment_confirmed':
+      case 'booking_confirmed':
+      case 'order_completed':
+        // Navigate to order details if order_id is available
+        if (notification.data?.order_id) {
+          navigationPath = `/order/${notification.data.order_id}`
+        } else {
+          navigationPath = '/dashboard'
+        }
+        break
+      
+      case 'booking_cancelled':
+        // Navigate to dashboard to see cancelled bookings
+        navigationPath = '/dashboard'
+        break
+      
+      case 'vendor_verified':
+      case 'vendor_rejected':
+        // Navigate to vendor dashboard
+        navigationPath = '/vendor/dashboard'
+        break
+      
+      case 'new_review':
+        // Navigate to vendor reviews or dashboard
+        navigationPath = '/vendor/dashboard'
+        break
+      
+      case 'new_booking':
+        // Navigate to vendor bookings
+        navigationPath = '/vendor/dashboard'
+        break
+      
+      case 'new_like':
+      case 'new_dislike':
+        // Navigate to vendor profile
+        navigationPath = '/vendor/dashboard'
+        break
+      
+      case 'payment_failed':
+        // Navigate to cart or payment page
+        navigationPath = '/cart'
+        break
+      
+      case 'ticket_verified':
+        // Navigate to order details if order_id is available
+        if (notification.data?.order_id) {
+          navigationPath = `/order/${notification.data.order_id}`
+        } else {
+          navigationPath = '/dashboard'
+        }
+        break
+      
+      default:
+        // Default to dashboard
+        navigationPath = '/dashboard'
+    }
+
+    // Navigate if path is set
+    if (navigationPath) {
+      onClose()
+      router.push(navigationPath)
+    }
   }
 
   const getNotificationIcon = (type: string) => {
@@ -163,10 +248,10 @@ export function NotificationList({ userId, onClose }: NotificationListProps) {
               key={notification.id}
               className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
                 notification.is_read 
-                  ? 'bg-white/90 hover:bg-white border border-gray-200' 
-                  : 'bg-white hover:bg-gray-50 border-2 border-blue-200 shadow-sm'
+                  ? 'bg-muted/50 hover:bg-muted border border-border' 
+                  : 'bg-accent/10 hover:bg-accent/20 border-2 border-primary shadow-sm'
               }`}
-              onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+              onClick={() => handleNotificationClick(notification)}
             >
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-1">

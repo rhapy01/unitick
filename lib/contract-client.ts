@@ -16,6 +16,7 @@ const UNILABOOK_ABI = parseAbi([
   "function getOrderBookings(uint256 orderId) view returns ((uint256 bookingId, uint256 orderId, address vendor, uint256 amount, uint256 tokenId, string serviceName, uint256 bookingDate)[])",
   "function verifyTicket(uint256 tokenId, address owner) view returns (bool)",
   "function getTicketDetails(uint256 tokenId) view returns ((uint256 bookingId, uint256 orderId, address vendor, uint256 amount, uint256 tokenId, string serviceName, uint256 bookingDate))",
+  "function isFreeTicket(uint256 tokenId) view returns (bool)",
   "function ownerOf(uint256 tokenId) view returns (address)",
   "function tokenURI(uint256 tokenId) view returns (string)",
 
@@ -38,6 +39,7 @@ const UNILABOOK_ABI = parseAbi([
   // Events
   "event OrderCreated(uint256 indexed orderId, address indexed buyer, uint256 totalAmount, uint256 platformFee)",
   "event TicketMinted(uint256 indexed tokenId, uint256 indexed orderId, address indexed owner)",
+  "event FreeTicketCreated(uint256 indexed tokenId, uint256 indexed orderId, address indexed vendor, string serviceName)",
   "event PlatformFeeUpdated(uint256 newFee)",
   "event PlatformWalletUpdated(address newWallet)",
   "event VendorWhitelisted(address indexed vendor)",
@@ -146,7 +148,19 @@ function getChain() {
 export function getPublicClient() {
   const chain = getChain()
   const rpc = process.env.NEXT_PUBLIC_RPC_URL || (chain.id === 84532 ? DEFAULT_BASE_SEPOLIA_RPC : chain.rpcUrls.public.http[0])
-  return createPublicClient({ chain, transport: http(rpc) })
+  
+  console.log('[Contract Client] Creating public client:', {
+    chainId: chain.id,
+    chainName: chain.name,
+    rpc: rpc
+  })
+  
+  // Add timeout to RPC calls (10 seconds)
+  const transport = http(rpc, {
+    timeout: 10000,
+  })
+  
+  return createPublicClient({ chain, transport })
 }
 
 export function getContractClient() {
@@ -212,16 +226,17 @@ export async function approveInfiniteUniTickTokens(walletClient?: any): Promise<
 }
 
 // Approve specific amount of UniTick tokens (fallback)
-export async function approveUniTickTokens(amount: bigint, walletClient?: any): Promise<Hash> {
+export async function approveUniTickTokens(amount: bigint, walletClient?: any, spender?: Address): Promise<Hash> {
   const contractAddress = getUnilaBookAddress()
   const unitickAddress = getContractAddress("UNITICK")
+  const spenderAddress = spender || contractAddress
 
   if (walletClient) {
     return await walletClient.writeContract({
       address: unitickAddress as `0x${string}`,
       abi: unitickAbi,
       functionName: "approve",
-      args: [contractAddress, amount],
+      args: [spenderAddress, amount],
       account: walletClient.account,
     })
   } else {
@@ -230,7 +245,7 @@ export async function approveUniTickTokens(amount: bigint, walletClient?: any): 
       address: unitickAddress as `0x${string}`,
       abi: unitickAbi,
       functionName: "approve",
-      args: [contractAddress, amount],
+      args: [spenderAddress, amount],
       account,
     })
   }
@@ -707,6 +722,11 @@ export async function getTicketDetailsFromChain(tokenId: bigint): Promise<Bookin
   return await contract.read.getTicketDetails([tokenId]) as BookingData
 }
 
+export async function isFreeTicket(tokenId: bigint): Promise<boolean> {
+  const contract = getContractClient()
+  return await contract.read.isFreeTicket([tokenId]) as boolean
+}
+
 export async function getTicketOwner(tokenId: bigint): Promise<Address> {
   const contract = getContractClient()
   return await contract.read.ownerOf([tokenId]) as Address
@@ -787,11 +807,27 @@ export async function isVendorWhitelisted(vendor: Address): Promise<boolean> {
 }
 
 export async function getWhitelistedVendorsCount(): Promise<bigint> {
-  const contract = getContractClient()
-  return await contract.read.getWhitelistedVendorsCount([]) as bigint
+  try {
+    const contract = getContractClient()
+    console.log('[Contract Client] Getting whitelisted vendors count from contract:', getUnilaBookAddress())
+    const count = await contract.read.getWhitelistedVendorsCount([]) as bigint
+    console.log('[Contract Client] Whitelisted vendors count:', count.toString())
+    return count
+  } catch (error) {
+    console.error('[Contract Client] Error getting whitelisted vendors count:', error)
+    throw error
+  }
 }
 
 export async function getWhitelistedVendor(index: bigint): Promise<Address> {
-  const contract = getContractClient()
-  return await contract.read.getWhitelistedVendor([index]) as Address
+  try {
+    const contract = getContractClient()
+    console.log('[Contract Client] Getting whitelisted vendor at index:', index.toString())
+    const vendor = await contract.read.getWhitelistedVendor([index]) as Address
+    console.log('[Contract Client] Whitelisted vendor:', vendor)
+    return vendor
+  } catch (error) {
+    console.error('[Contract Client] Error getting whitelisted vendor:', error)
+    throw error
+  }
 }
