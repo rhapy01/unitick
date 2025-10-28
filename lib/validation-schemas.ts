@@ -112,6 +112,7 @@ export const cartItemSchema = z.object({
   recipient_name: z.string().optional(),
   recipient_email: emailSchema.optional(),
   recipient_phone: phoneSchema.optional(),
+  recipient_wallet: z.string().optional(),
 })
 
 // Form validation schemas

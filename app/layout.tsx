@@ -12,10 +12,79 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "UniTick",
-  description:
-    "Book accommodation, car hire, tours, cinema, and events with crypto - Earn Unila Miles with every booking!",
-  generator: 'v0.app',
+  title: {
+    default: "UniTick - Multi-Service Booking Platform | Crypto Payments",
+    template: "%s | UniTick"
+  },
+  description: "Book accommodation, car hire, tours, cinema, and events with crypto payments. Earn Unila Miles with every booking! Multi-vendor booking platform with unified NFT tickets.",
+  keywords: [
+    "crypto booking",
+    "multi-service booking",
+    "NFT tickets",
+    "blockchain payments",
+    "accommodation booking",
+    "car hire",
+    "tours",
+    "cinema tickets",
+    "event tickets",
+    "cryptocurrency payments",
+    "UniTick",
+    "Unila Miles",
+    "decentralized booking"
+  ],
+  authors: [{ name: "UniTick Team" }],
+  creator: "UniTick",
+  publisher: "UniTick",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://unitick.app'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: '/',
+    title: 'UniTick - Multi-Service Booking Platform | Crypto Payments',
+    description: 'Book accommodation, car hire, tours, cinema, and events with crypto payments. Earn Unila Miles with every booking!',
+    siteName: 'UniTick',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'UniTick - Multi-Service Booking Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'UniTick - Multi-Service Booking Platform | Crypto Payments',
+    description: 'Book accommodation, car hire, tours, cinema, and events with crypto payments. Earn Unila Miles with every booking!',
+    images: ['/og-image.jpg'],
+    creator: '@unitick',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_VERIFICATION,
+    yahoo: process.env.YAHOO_VERIFICATION,
+  },
+  category: 'technology',
+  generator: 'Next.js',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -25,6 +94,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({

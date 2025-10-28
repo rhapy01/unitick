@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getSecureWalletForUser } from '@/lib/wallet-secure'
-import { createOrderFromCartItems } from '@/lib/contract-client'
+import { createOrderFromCartItems, createGiftOrderFromCartItems } from '@/lib/contract-client'
 import { sendPaymentConfirmationEmail } from '@/lib/email-notifications'
 import { verifyPaymentOnChain } from '@/lib/payment-verification'
 import { CONTRACT_ADDRESSES } from '@/lib/addresses'
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
     // Verify user is authenticated
     console.log('[Payment API] Verifying user authentication...')
     const supabase = await createClient()
+    const admin = createAdminClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError) {
@@ -112,16 +114,49 @@ export async function POST(request: NextRequest) {
       walletAddress: profile.wallet_address 
     })
 
+    // Check if this is a gift order
+    const hasGiftItems = cartItems.some(item => item.is_gift)
+    const giftItems = cartItems.filter(item => item.is_gift)
+    const regularItems = cartItems.filter(item => !item.is_gift)
+    
+    console.log('[Payment API] Order analysis:', {
+      totalItems: cartItems.length,
+      giftItems: giftItems.length,
+      regularItems: regularItems.length,
+      hasGiftItems
+    })
+
     // Process the payment using the internal wallet
     console.log('[Payment API] Starting blockchain transaction...')
     try {
-      // Use internal wallet system
-      console.log('[Payment API] Processing with internal wallet...')
-      const result = await createOrderFromCartItems(
-        cartItems,
-        user.id,
-        profile.email
-      )
+      let result
+      
+      if (hasGiftItems && giftItems.length > 0) {
+        // Process gift order - NFTs will be minted directly to recipients
+        console.log('[Payment API] Processing gift order with internal wallet...')
+        
+        // Validate all gift items have recipient wallet addresses
+        for (const item of giftItems) {
+          if (!item.recipient_wallet) {
+            throw new Error(`Gift item ${item._id || item.id} is missing recipient wallet address`)
+          }
+        }
+        
+        // Use the new gift order function (now handles multiple recipients)
+        result = await createGiftOrderFromCartItems(
+          giftItems,
+          user.id,
+          profile.email
+        )
+      } else {
+        // Process regular order
+        console.log('[Payment API] Processing regular order with internal wallet...')
+        result = await createOrderFromCartItems(
+          cartItems,
+          user.id,
+          profile.email
+        )
+      }
       
       console.log('[Payment API] Blockchain transaction result:', {
         success: result.success,
@@ -141,7 +176,7 @@ export async function POST(request: NextRequest) {
         const totalAmount = subtotal + platformFeeTotal
         
         // Create order in database
-        const { error: orderError } = await supabase
+        const { error: orderError } = await admin
           .from('orders')
           .insert({
             id: orderId,
@@ -171,15 +206,57 @@ export async function POST(request: NextRequest) {
           const itemPlatformFee = itemSubtotal * 0.005
           const itemTotal = itemSubtotal + itemPlatformFee
           
+          // Determine the user_id for the booking
+          // For gift items, we need to find or create a profile for the recipient
+          let bookingUserId = user.id
+          let recipientProfileId = null
+          
+          if (cartItem.is_gift && cartItem.recipient_email) {
+            // Check if recipient already has a profile
+            const { data: existingRecipient } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('email', cartItem.recipient_email.toLowerCase())
+              .single()
+            
+            if (existingRecipient) {
+              recipientProfileId = existingRecipient.id
+              bookingUserId = existingRecipient.id
+            } else {
+              // Create a profile for the recipient (they'll claim the gift later)
+              const { data: newRecipient, error: recipientError } = await supabase
+                .from('profiles')
+                .insert({
+                  email: cartItem.recipient_email.toLowerCase(),
+                  full_name: cartItem.recipient_name || 'Gift Recipient',
+                  wallet_address: cartItem.recipient_wallet,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .select('id')
+                .single()
+              
+              if (recipientError) {
+                console.error('[Payment API] Failed to create recipient profile:', recipientError)
+                // Fallback to buyer's profile
+                bookingUserId = user.id
+              } else {
+                recipientProfileId = newRecipient.id
+                bookingUserId = newRecipient.id
+              }
+            }
+          }
+          
           // Create booking
-          const { error: bookingError } = await supabase
+          const { error: bookingError } = await admin
             .from('bookings')
             .insert({
               id: bookingId,
-              user_id: user.id,
+              order_id: orderId, // Link booking to order
+              user_id: bookingUserId, // This will be the recipient for gift items
               listing_id: cartItem.listing.id,
               vendor_id: cartItem.listing.vendor_id,
-              booking_date: cartItem.booking_date,
+              booking_date: cartItem.booking_date || new Date().toISOString(), // Fallback to current date if null
               quantity: cartItem.quantity,
               subtotal: itemSubtotal,
               platform_fee: itemPlatformFee,
@@ -189,6 +266,7 @@ export async function POST(request: NextRequest) {
               recipient_name: cartItem.recipient_name,
               recipient_email: cartItem.recipient_email,
               recipient_phone: cartItem.recipient_phone,
+              recipient_wallet: cartItem.recipient_wallet,
               gift_message: cartItem.gift_message,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -199,7 +277,7 @@ export async function POST(request: NextRequest) {
             // Continue with other bookings
           } else {
             // Link booking to order
-            const { error: orderItemError } = await supabase
+            const { error: orderItemError } = await admin
               .from('order_items')
               .insert({
                 order_id: orderId,
@@ -225,7 +303,7 @@ export async function POST(request: NextRequest) {
           })))
           
           if (cartItemIds.length > 0) {
-            const { error: cartClearError } = await supabase
+            const { error: cartClearError } = await admin
               .from('cart_items')
               .delete()
               .in('id', cartItemIds)

@@ -13,8 +13,8 @@ async function main() {
     ];
 
     // Get the contract addresses from your deployment
-    // Using the new UniTick contract address
-    const UNILABOOK_CONTRACT_ADDRESS = "0xc4e90Dcd9Da001Dc463570d66d8281821De58D5C";
+    // Using the new deployed contract address with gift functionality
+    const UNILABOOK_CONTRACT_ADDRESS = "0xf3b0fc3021a28e75deEe5c1bbba3A7a714eE9C79";
     
     console.log("🚀 Starting vendor whitelisting process...");
     console.log("📋 Vendor addresses to whitelist:");

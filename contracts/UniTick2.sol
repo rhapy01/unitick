@@ -99,6 +99,31 @@ contract UniTick is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     event PlatformFeeUpdated(uint256 newFee);
     event PlatformWalletUpdated(address newWallet);
     
+    // Gift-specific events
+    event GiftOrderCreated(
+        uint256 indexed orderId,
+        address indexed buyer,
+        address indexed recipient,
+        uint256 totalAmount,
+        uint256 platformFee
+    );
+    
+    event GiftTicketMinted(
+        uint256 indexed tokenId,
+        uint256 indexed orderId,
+        address indexed recipient,
+        address buyer
+    );
+    
+    event FreeGiftTicketCreated(
+        uint256 indexed tokenId,
+        uint256 indexed orderId,
+        address indexed vendor,
+        string serviceName,
+        address recipient,
+        address buyer
+    );
+    
     constructor(address _platformWallet, address _uniTickToken) ERC721("UniTick Tickets", "UNITICK") Ownable(msg.sender) {
         require(_platformWallet != address(0), "Invalid platform wallet");
         require(_uniTickToken != address(0), "Invalid UniTick token address");
@@ -316,6 +341,134 @@ contract UniTick is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
         userOrders[msg.sender].push(orderId);
         
         emit OrderCreated(orderId, msg.sender, totalAmount, platformFee);
+        
+        return orderId;
+    }
+    
+    /**
+     * @dev Create a new gift order with multiple vendor payments
+     * @param recipients Array of recipient addresses (one per vendor payment)
+     * @param _vendorPayments Array of vendor addresses and amounts (amount can be 0 for free tickets)
+     * @param _serviceNames Array of service names for each vendor
+     * @param _bookingDates Array of booking dates for each service
+     * @param _metadata JSON metadata for the order
+     * @notice Supports free tickets (amount = 0) - no token transfer required for free tickets
+     * @notice NFTs are minted directly to their corresponding recipient wallets
+     */
+    function createOrderForGift(
+        address[] calldata recipients,
+        VendorPayment[] calldata _vendorPayments,
+        string[] calldata _serviceNames,
+        uint256[] calldata _bookingDates,
+        string calldata _metadata
+    ) external nonReentrant returns (uint256) {
+        // Input validation
+        require(recipients.length > 0, "No recipients provided");
+        require(_vendorPayments.length > 0, "No vendor payments");
+        require(_vendorPayments.length <= MAX_VENDORS_PER_ORDER, "Too many vendors");
+        require(_vendorPayments.length == _serviceNames.length, "Mismatched service names");
+        require(_vendorPayments.length == _bookingDates.length, "Mismatched booking dates");
+        require(recipients.length == _vendorPayments.length, "Mismatched recipients");
+        
+        // Validate all recipient addresses
+        for (uint256 i = 0; i < recipients.length; i++) {
+            require(recipients[i] != address(0), "Invalid recipient address");
+        }
+        
+        // Calculate total and validate vendors
+        uint256 totalAmount = 0;
+        for (uint256 i = 0; i < _vendorPayments.length; i++) {
+            require(_vendorPayments[i].vendor != address(0), "Invalid vendor address");
+            require(_vendorPayments[i].amount >= 0, "Amount cannot be negative");
+
+            // Security: Check vendor whitelist (even for free tickets)
+            require(whitelistedVendors[_vendorPayments[i].vendor], "Vendor not whitelisted");
+
+            // Check for overflow
+            uint256 newTotal = totalAmount + _vendorPayments[i].amount;
+            require(newTotal >= totalAmount, "Amount overflow");
+            totalAmount = newTotal;
+        }
+
+        // Calculate platform fee
+        uint256 platformFee = (totalAmount * platformFeeBps) / 10000;
+        uint256 requiredAmount = totalAmount + platformFee;
+        require(requiredAmount >= totalAmount, "Fee calculation overflow");
+
+        // Transfer UniTick tokens from buyer to contract (only if amount > 0)
+        if (requiredAmount > 0) {
+            require(uniTickToken.transferFrom(msg.sender, address(this), requiredAmount), "UniTick transfer failed");
+        }
+        
+        // Get next order ID
+        uint256 orderId = _nextOrderId;
+        _nextOrderId++;
+        
+        // Create order (buyer is msg.sender for payment tracking, but NFTs go to recipients)
+        orders[orderId] = Order({
+            orderId: orderId,
+            buyer: msg.sender, // Buyer pays
+            totalAmount: totalAmount,
+            platformFee: platformFee,
+            timestamp: block.timestamp,
+            isPaid: true, // Always true since we handle 0 payments
+            metadata: _metadata
+        });
+        
+        // Process payments and mint tickets
+        for (uint256 i = 0; i < _vendorPayments.length; i++) {
+            // Store vendor payment
+            orderVendorPayments[orderId].push(VendorPayment({
+                vendor: _vendorPayments[i].vendor,
+                amount: _vendorPayments[i].amount,
+                isPaid: true // Always true since we handle 0 payments
+            }));
+            
+            // Send payment to vendor in UniTick tokens (only if amount > 0)
+            if (_vendorPayments[i].amount > 0) {
+                require(uniTickToken.transfer(_vendorPayments[i].vendor, _vendorPayments[i].amount), "Vendor token transfer failed");
+            }
+            
+            emit PaymentProcessed(orderId, _vendorPayments[i].vendor, _vendorPayments[i].amount);
+            
+            // Create booking
+            uint256 tokenId = _nextTokenId;
+            _nextTokenId++;
+            
+            orderBookings[orderId].push(Booking({
+                bookingId: i,
+                orderId: orderId,
+                vendor: _vendorPayments[i].vendor,
+                amount: _vendorPayments[i].amount,
+                tokenId: tokenId,
+                serviceName: _serviceNames[i],
+                bookingDate: _bookingDates[i]
+            }));
+            
+            // KEY CHANGE: Mint NFT directly to the corresponding recipient
+            _safeMint(recipients[i], tokenId);
+            tokenToOrder[tokenId] = orderId;
+            
+            // Emit gift-specific events based on payment amount
+            if (_vendorPayments[i].amount == 0) {
+                emit FreeGiftTicketCreated(tokenId, orderId, _vendorPayments[i].vendor, _serviceNames[i], recipients[i], msg.sender);
+            } else {
+                emit GiftTicketMinted(tokenId, orderId, recipients[i], msg.sender);
+            }
+            
+            // Track vendor orders
+            vendorOrders[_vendorPayments[i].vendor].push(orderId);
+        }
+        
+        // Send platform fee in UniTick tokens
+        if (platformFee > 0) {
+            require(uniTickToken.transfer(platformWallet, platformFee), "Platform fee token transfer failed");
+        }
+        
+        // Track user orders (buyer's orders)
+        userOrders[msg.sender].push(orderId);
+        
+        emit GiftOrderCreated(orderId, msg.sender, recipients[0], totalAmount, platformFee); // First recipient for compatibility
         
         return orderId;
     }

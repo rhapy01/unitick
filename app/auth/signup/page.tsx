@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Image from "next/image"
 
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -13,7 +14,6 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { validateSignup, checkPasswordStrength } from "@/lib/auth-validation-client"
-import { Wallet, CheckCircle2, User, Mail, Lock, Sparkles, Store, ShoppingBag } from "lucide-react"
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -76,71 +76,69 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-background via-background to-accent/5">
-      <div className="w-full max-w-lg">
+    <div className="flex min-h-screen w-full items-center justify-center p-4 sm:p-6 bg-black overflow-y-auto">
+      <div className="w-full max-w-2xl py-8">
         {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 mb-4 shadow-lg">
-            <Sparkles className="h-8 w-8 text-primary-foreground" />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center mb-5">
+            <Image 
+              src="/darklogo.png" 
+              alt="UniTick Logo" 
+              width={64} 
+              height={64}
+              className="w-16 h-16"
+              priority
+            />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
             Join UniTick
           </h1>
-          <p className="text-muted-foreground mt-2">Start your crypto ticketing journey</p>
+          <p className="text-gray-400">Start your crypto ticketing journey</p>
         </div>
 
-        <Card className="border-border/50 shadow-xl backdrop-blur">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-            <CardDescription>Enter your details to get started</CardDescription>
+        <Card className="border-gray-800 bg-gray-950 shadow-2xl">
+          <CardHeader className="space-y-1 pb-6 border-b border-gray-800 bg-gray-950">
+            <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
+            <CardDescription className="text-gray-400">Enter your details to get started</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6 bg-gray-950">
             <form onSubmit={handleSignup}>
               <div className="flex flex-col gap-5">
                 <div className="grid gap-2">
-                  <Label htmlFor="fullName" className="text-sm font-medium">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="fullName"
-                      type="text"
-                      placeholder="John Doe"
-                      className="pl-10"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                    />
-                  </div>
+                  <Label htmlFor="fullName" className="text-sm font-medium text-gray-300">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    className="bg-gray-900 border-gray-800 text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      className="pl-10"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </div>
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-300">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    className="bg-gray-900 border-gray-800 text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-10"
-                      required
-                      value={password}
-                      onChange={(e) => handlePasswordChange(e.target.value)}
-                    />
-                  </div>
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-300">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="bg-gray-900 border-gray-800 text-white placeholder:text-gray-500 focus:border-primary focus:ring-primary"
+                    required
+                    value={password}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
+                  />
                   {password && passwordStrength.feedback.length > 0 && (
                     <div className="space-y-2 mt-2">
                       <div className="flex gap-1">
@@ -154,30 +152,30 @@ export default function SignupPage() {
                                   : level <= 3
                                   ? "bg-yellow-500"
                                   : "bg-green-500"
-                                : "bg-muted"
+                                : "bg-gray-700"
                             }`}
                           />
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-gray-400">
                         {passwordStrength.feedback.join(", ")}
                       </p>
                     </div>
                   )}
                 </div>
                 <div className="grid gap-3">
-                  <Label className="text-sm font-medium">Account Type</Label>
+                  <Label className="text-sm font-medium text-gray-300">Account Type</Label>
                   <RadioGroup value={role} onValueChange={(value) => setRole(value as "user" | "vendor")} className="grid grid-cols-2 gap-3">
                     <div>
                       <RadioGroupItem value="user" id="user" className="peer sr-only" />
                       <Label
                         htmlFor="user"
-                        className="flex flex-col items-center justify-between rounded-lg border-2 border-pink-200 dark:border-blue-800 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-blue-950/30 dark:to-blue-900/30 p-4 hover:from-pink-100 hover:to-rose-200 dark:hover:from-blue-900/40 dark:hover:to-blue-800/40 hover:text-pink-900 dark:hover:text-blue-100 peer-data-[state=checked]:border-pink-500 dark:peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-gradient-to-br peer-data-[state=checked]:from-pink-200 peer-data-[state=checked]:to-rose-300 dark:peer-data-[state=checked]:from-blue-800/50 dark:peer-data-[state=checked]:to-blue-700/50 cursor-pointer transition-all"
+                        className="flex flex-col items-center justify-between rounded-lg border-2 border-gray-700 bg-gray-900 p-5 hover:border-primary/50 hover:bg-gray-800 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-gray-800 cursor-pointer transition-all"
                       >
-                        <ShoppingBag className="mb-2 h-6 w-6 text-pink-600 dark:text-blue-400" />
+                        <div className="text-2xl mb-2">🛍️</div>
                         <div className="text-center">
-                          <div className="font-semibold text-pink-900 dark:text-blue-100">Customer</div>
-                          <div className="text-xs text-pink-700 dark:text-blue-300 mt-1">Book services & tickets</div>
+                          <div className="font-semibold text-white">Customer</div>
+                          <div className="text-xs text-gray-400 mt-1">Book services & tickets</div>
                         </div>
                       </Label>
                     </div>
@@ -185,12 +183,12 @@ export default function SignupPage() {
                       <RadioGroupItem value="vendor" id="vendor" className="peer sr-only" />
                       <Label
                         htmlFor="vendor"
-                        className="flex flex-col items-center justify-between rounded-lg border-2 border-pink-200 dark:border-blue-800 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-blue-950/30 dark:to-blue-900/30 p-4 hover:from-pink-100 hover:to-rose-200 dark:hover:from-blue-900/40 dark:hover:to-blue-800/40 hover:text-pink-900 dark:hover:text-blue-100 peer-data-[state=checked]:border-pink-500 dark:peer-data-[state=checked]:border-blue-500 peer-data-[state=checked]:bg-gradient-to-br peer-data-[state=checked]:from-pink-200 peer-data-[state=checked]:to-rose-300 dark:peer-data-[state=checked]:from-blue-800/50 dark:peer-data-[state=checked]:to-blue-700/50 cursor-pointer transition-all"
+                        className="flex flex-col items-center justify-between rounded-lg border-2 border-gray-700 bg-gray-900 p-5 hover:border-primary/50 hover:bg-gray-800 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-gray-800 cursor-pointer transition-all"
                       >
-                        <Store className="mb-2 h-6 w-6 text-pink-600 dark:text-blue-400" />
+                        <div className="text-2xl mb-2">🏪</div>
                         <div className="text-center">
-                          <div className="font-semibold text-pink-900 dark:text-blue-100">Vendor</div>
-                          <div className="text-xs text-pink-700 dark:text-blue-300 mt-1">List services & sell tickets</div>
+                          <div className="font-semibold text-white">Vendor</div>
+                          <div className="text-xs text-gray-400 mt-1">List services & sell tickets</div>
                         </div>
                       </Label>
                     </div>
@@ -199,30 +197,24 @@ export default function SignupPage() {
                 
                 {/* Vendor Setup Notice */}
                 {role === "vendor" && (
-                  <div className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200/50 dark:border-purple-800/50 rounded-xl p-4">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full blur-3xl" />
-                    <div className="relative flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-                        <Store className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="space-y-2 flex-1">
-                        <h4 className="font-semibold text-purple-900 dark:text-purple-100 flex items-center gap-2">
-                          Vendor Account Setup
-                          <Sparkles className="h-4 w-4 text-yellow-500" />
-                        </h4>
-                        <div className="text-sm text-purple-700 dark:text-purple-300 space-y-1.5">
-                          <div className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                            <span>After signup, you'll complete your vendor profile</span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                            <span>Add business details and service categories</span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                            <span>Start listing services immediately after setup</span>
-                          </div>
+                  <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-4">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+                    <div className="relative space-y-3">
+                      <h4 className="font-semibold text-white flex items-center gap-2">
+                        Vendor Account Setup
+                      </h4>
+                      <div className="text-sm text-gray-300 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-0.5">✓</span>
+                          <span>After signup, you'll complete your vendor profile</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-0.5">✓</span>
+                          <span>Add business details and service categories</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-green-500 mt-0.5">✓</span>
+                          <span>Start listing services immediately after setup</span>
                         </div>
                       </div>
                     </div>
@@ -230,43 +222,37 @@ export default function SignupPage() {
                 )}
                 
                 {/* Wallet Creation Notice */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-pink-100 via-rose-100 to-pink-200 dark:from-blue-950/30 dark:to-blue-900/30 border border-pink-200/50 dark:border-blue-800/50 rounded-xl p-4">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-pink-400/20 dark:bg-blue-400/20 rounded-full blur-3xl" />
-                  <div className="relative flex items-start gap-3">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 dark:from-blue-500 dark:to-blue-600 flex items-center justify-center shadow-lg">
-                      <Wallet className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="space-y-2 flex-1">
-                      <h4 className="font-semibold text-pink-900 dark:text-blue-100 flex items-center gap-2">
-                        Easy Wallet Setup
-                        <Sparkles className="h-4 w-4 text-yellow-500" />
-                      </h4>
-                      <div className="text-sm text-pink-800 dark:text-blue-200 space-y-1.5">
-                        <div className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Create your wallet with one click after signup</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Ready to use in seconds</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>Or connect your existing wallet anytime</span>
-                        </div>
+                <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-xl p-4">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
+                  <div className="relative space-y-3">
+                    <h4 className="font-semibold text-white">
+                      Easy Wallet Setup
+                    </h4>
+                    <div className="text-sm text-gray-300 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <span>Create your wallet with one click after signup</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <span>Ready to use in seconds</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-500 mt-0.5">✓</span>
+                        <span>Or connect your existing wallet anytime</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 {error && (
-                  <Alert variant="destructive" className="border-destructive/50">
-                    <AlertDescription className="text-sm">{error}</AlertDescription>
+                  <Alert variant="destructive" className="border-red-800 bg-red-950">
+                    <AlertDescription className="text-sm text-red-300">{error}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" className="w-full h-11 text-base font-semibold shadow-lg hover:shadow-xl transition-all bg-accent text-white hover:bg-accent/90" disabled={isLoading}>
+                <Button type="submit" className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 text-white" disabled={isLoading}>
                   {isLoading ? (
                     <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
                       Creating account...
                     </span>
                   ) : (
@@ -275,9 +261,9 @@ export default function SignupPage() {
                 </Button>
               </div>
               <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-400">
                   Already have an account?{" "}
-                  <Link href="/auth/login" className="font-semibold text-primary hover:underline underline-offset-4 transition-colors">
+                  <Link href="/auth/login" className="font-semibold text-primary hover:text-primary/80 underline-offset-4 transition-colors">
                     Sign in
                   </Link>
                 </p>
@@ -287,7 +273,7 @@ export default function SignupPage() {
         </Card>
         
         {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
+        <p className="text-center text-xs text-gray-500 mt-6">
           By signing up, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>

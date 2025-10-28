@@ -402,26 +402,26 @@ export default function GiftBookingPage() {
                               5
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-bold text-lg mb-2">Recipient Claims Gift</h3>
+                              <h3 className="font-bold text-lg mb-2">NFTs Minted Directly</h3>
                               <p className="text-muted-foreground mb-4">
-                                Recipients click the claim link, create an account if needed, and receive their NFT tickets.
+                                NFT tickets are minted directly to the recipient's wallet address during payment processing.
                               </p>
-                              <div className="bg-muted/50 rounded-lg p-4">
+                              <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                  <span className="font-medium">Click claim link in email</span>
+                                  <span className="font-medium text-white">NFTs minted to recipient wallet</span>
                                 </div>
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                  <span className="font-medium">Create account if new user</span>
+                                  <span className="font-medium text-white">Email notification sent</span>
                                 </div>
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                  <span className="font-medium">NFT tickets transferred to wallet</span>
+                                  <span className="font-medium text-white">Recipient can view tickets immediately</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                  <span className="font-medium">Access tickets in dashboard</span>
+                                  <span className="font-medium text-white">No claiming process needed</span>
                                 </div>
                               </div>
                             </div>

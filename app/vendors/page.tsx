@@ -754,9 +754,6 @@ export default function BrowseVendorsPage() {
         ) : (
           <Card className="max-w-2xl mx-auto border-dashed">
             <CardContent className="p-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-muted-foreground" />
-          </div>
               <h3 className="text-lg font-semibold mb-2">No providers found</h3>
               <p className="text-muted-foreground mb-4">
                 We couldn't find any service providers matching "{searchQuery}"

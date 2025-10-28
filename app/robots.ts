@@ -1,0 +1,70 @@
+import { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://unitick.app'
+  
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/debug-*/',
+          '/check-profile-wallet/',
+          '/token-approval/',
+          '/payment/',
+          '/cart/',
+          '/checkout/',
+          '/order/',
+          '/profile/',
+          '/dashboard/',
+          '/vendor/dashboard/',
+          '/vendor/settings/',
+          '/vendor/setup/',
+          '/vendor/verify*/',
+          '/notifications/',
+          '/wallet/',
+          '/verify/',
+          '/gift/configure/',
+          '/gift/claim/',
+          '/auth/login',
+          '/auth/signup',
+          '/auth/signup-success',
+        ],
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/debug-*/',
+          '/check-profile-wallet/',
+          '/token-approval/',
+          '/payment/',
+          '/cart/',
+          '/checkout/',
+          '/order/',
+          '/profile/',
+          '/dashboard/',
+          '/vendor/dashboard/',
+          '/vendor/settings/',
+          '/vendor/setup/',
+          '/vendor/verify*/',
+          '/notifications/',
+          '/wallet/',
+          '/verify/',
+          '/gift/configure/',
+          '/gift/claim/',
+          '/auth/login',
+          '/auth/signup',
+          '/auth/signup-success',
+        ],
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
+  }
+}

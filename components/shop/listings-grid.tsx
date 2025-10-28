@@ -3,10 +3,11 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Minus, Check, Users, AlertCircle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Plus, Minus, Check, Users, AlertCircle, ChevronLeft, ChevronRight, Loader2, Heart, Share2, Eye, Star, MapPin, Clock } from "lucide-react"
 import type { Listing, CartItem } from "@/lib/types"
 import { sanitizeUserInput, sanitizePrice } from "@/lib/sanitize"
 import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 interface ListingsGridProps {
   listings: Listing[]
@@ -15,10 +16,25 @@ interface ListingsGridProps {
   onRemoveFromCart: (listing: Listing) => void
   cartItems: CartItem[]
   cartLoadingStates: Record<string, boolean>
+  favorites?: Set<string>
+  onToggleFavorite?: (listingId: string) => void
+  onViewListing?: (listing: Listing) => void
 }
 
-export function ListingsGrid({ listings, isLoading, onAddToCart, onRemoveFromCart, cartItems, cartLoadingStates }: ListingsGridProps) {
+export function ListingsGrid({ 
+  listings, 
+  isLoading, 
+  onAddToCart, 
+  onRemoveFromCart, 
+  cartItems, 
+  cartLoadingStates,
+  favorites = new Set(),
+  onToggleFavorite,
+  onViewListing
+}: ListingsGridProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState<Record<string, number>>({})
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const handleImageNavigation = (listingId: string, direction: 'prev' | 'next', totalImages: number) => {
     setCurrentImageIndex(prev => {
@@ -34,15 +50,43 @@ export function ListingsGrid({ listings, isLoading, onAddToCart, onRemoveFromCar
       return { ...prev, [listingId]: newIndex }
     })
   }
+
+  const getCartItem = (listingId: string) => {
+    return cartItems.find(item => item.listing.id === listingId)
+  }
+
+  const handleShare = async (listing: Listing) => {
+    try {
+      const url = `${window.location.origin}/listing/${listing.id}`
+      await navigator.clipboard.writeText(url)
+      toast({
+        title: "Link Copied!",
+        description: "Listing link has been copied to your clipboard.",
+        duration: 2000,
+      })
+    } catch (error) {
+      console.error('Failed to copy link:', error)
+      toast({
+        title: "Copy Failed",
+        description: "Unable to copy link. Please try again.",
+        variant: "destructive",
+        duration: 2000,
+      })
+    }
+  }
+
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
-              <div className="h-48 bg-muted rounded-lg mb-4" />
-              <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-              <div className="h-4 bg-muted rounded w-1/2" />
+              <div className="bg-muted rounded-lg h-48 mb-4" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+                <div className="h-4 bg-muted rounded w-2/3" />
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -51,175 +95,218 @@ export function ListingsGrid({ listings, isLoading, onAddToCart, onRemoveFromCar
   }
 
   if (listings.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">No listings available in this category yet.</p>
-        </CardContent>
-      </Card>
-    )
+    return null
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {listings.map((listing) => {
         const images = listing.images || []
-        const currentIndex = currentImageIndex[listing.id] || 0
-        const currentImage = images[currentIndex] || `/placeholder.svg?height=200&width=400&query=${encodeURIComponent(listing.title)}`
-        const hasMultipleImages = images.length > 1
-
-        // Check if this listing is in the cart
-        const cartItem = cartItems.find(item => item.listing.id === listing.id)
-        const isInCart = !!cartItem
-        const isLoading = cartLoadingStates[listing.id] || false
-
-        // Get availability info
-        const remainingTickets = (listing as any).remaining_tickets || 0
-        const totalTickets = (listing as any).total_tickets || (listing as any).capacity || 0
-        const isSoldOut = (listing as any).is_sold_out || remainingTickets === 0
-        const isLowStock = remainingTickets > 0 && remainingTickets <= 5
+        const currentImage = currentImageIndex[listing.id] || 0
+        const cartItem = getCartItem(listing.id)
+        const isFavorited = favorites.has(listing.id)
+        const isSoldOut = listing.is_sold_out || listing.remaining_tickets === 0
+        const isLowStock = listing.remaining_tickets !== undefined && listing.remaining_tickets < 10 && listing.remaining_tickets > 0
+        const totalTickets = (listing.remaining_tickets || 0) + (listing.booked_tickets || 0)
 
         return (
-          <Card key={listing.id} className={`overflow-hidden transition-colors ${
-            isSoldOut 
-              ? 'opacity-60 border-red-200 dark:border-red-800' 
-              : 'hover:border-primary'
-          }`}>
-            <div className="h-48 overflow-hidden bg-muted relative group">
-              <img
-                src={currentImage}
-                alt={listing.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              
-              {/* Image Navigation Arrows - Only show if multiple images */}
-              {hasMultipleImages && (
+          <Card 
+            key={listing.id} 
+            className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-accent/20 hover:-translate-y-1"
+            onMouseEnter={() => setHoveredCard(listing.id)}
+            onMouseLeave={() => setHoveredCard(null)}
+          >
+            <CardContent className="p-0">
+              {/* Image Section */}
+              <div className="relative aspect-video overflow-hidden bg-muted">
+                {images.length > 0 ? (
+                  <>
+                    <img
+                      src={images[currentImage]}
+                      alt={sanitizeUserInput(listing.title)}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {images.length > 1 && (
                 <>
                   <button
-                    onClick={() => handleImageNavigation(listing.id, 'prev', images.length)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleImageNavigation(listing.id, 'prev', images.length)
+                          }}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleImageNavigation(listing.id, 'next', images.length)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <ChevronRight className="w-4 h-4" />
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleImageNavigation(listing.id, 'next', images.length)
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <ChevronRight className="h-4 w-4" />
                   </button>
                 </>
               )}
-
-              {/* Image Indicators - Only show if multiple images */}
-              {hasMultipleImages && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                  {images.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`w-2 h-2 rounded-full transition-colors ${
-                        index === currentIndex ? 'bg-primary' : 'bg-primary/50'
-                      }`}
-                    />
-                  ))}
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      {onToggleFavorite && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onToggleFavorite(listing.id)
+                          }}
+                        >
+                          <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleShare(listing)
+                        }}
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    No image available
                 </div>
               )}
 
-              {/* Availability Badge */}
-              <div className="absolute top-2 right-2">
-                {isSoldOut ? (
+                {/* Status Badges */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  {isSoldOut && (
                   <Badge variant="destructive" className="text-xs">
-                    <AlertCircle className="w-3 h-3 mr-1" />
                     Sold Out
                   </Badge>
-                ) : isLowStock ? (
-                  <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                    <Users className="w-3 h-3 mr-1" />
-                    Only {remainingTickets} left
+                  )}
+                  {isLowStock && !isSoldOut && (
+                    <Badge variant="secondary" className="text-xs bg-orange-500 text-white">
+                      Low Stock
                   </Badge>
-                ) : (
-                  <Badge variant="secondary" className="text-xs">
-                    <Users className="w-3 h-3 mr-1" />
-                    {remainingTickets} available
+                  )}
+                  {listing.vendor?.is_verified && (
+                    <Badge variant="outline" className="text-xs bg-white/90 text-black">
+                      <Check className="h-2 w-2 mr-1" />
+                      Verified
                   </Badge>
                 )}
+                </div>
               </div>
 
-              {/* Image Count Badge - Only show if multiple images */}
-              {hasMultipleImages && (
-                <div className="absolute top-2 left-2">
-                  <Badge variant="secondary" className="text-xs bg-black/50 text-white">
-                    {currentIndex + 1}/{images.length}
+              {/* Content Section */}
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-accent transition-colors">
+                    {sanitizeUserInput(listing.title)}
+                  </h3>
+                  <Badge variant="secondary" className="text-sm shrink-0">
+                    ${sanitizePrice(listing.price).toFixed(2)}
                   </Badge>
                 </div>
-              )}
+                
+                <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+                  <MapPin className="h-4 w-4" />
+                  <span className="line-clamp-1">{sanitizeUserInput(listing.location)}</span>
             </div>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-semibold text-lg line-clamp-1">{sanitizeUserInput(listing.title)}</h3>
-                <Badge variant="secondary">${sanitizePrice(listing.price).toFixed(2)}</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{sanitizeUserInput(listing.description)}</p>
-              <p className="text-sm text-muted-foreground mb-4">📍 {sanitizeUserInput(listing.location)}</p>
+                
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                  {sanitizeUserInput(listing.description)}
+                </p>
               
               {/* Availability Info */}
+                {listing.remaining_tickets !== undefined && (
               <div className="mb-4 p-2 bg-muted/50 rounded-md">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Tickets Available:</span>
                   <span className="font-medium">
-                    {remainingTickets} / {totalTickets}
+                        {listing.remaining_tickets} / {totalTickets}
                   </span>
                 </div>
-                {totalTickets > 0 && (
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1">
                     <div 
                       className={`h-1.5 rounded-full ${
                         isSoldOut ? 'bg-red-500' : 
                         isLowStock ? 'bg-orange-500' : 'bg-green-500'
                       }`}
-                      style={{ width: `${Math.max(0, (remainingTickets / totalTickets) * 100)}%` }}
+                        style={{ width: `${Math.max(0, (listing.remaining_tickets / totalTickets) * 100)}%` }}
                     ></div>
+                    </div>
                   </div>
                 )}
-              </div>
-              
-              {isInCart ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center gap-2 p-2 bg-green-50 dark:bg-green-950 rounded-md">
-                    <Check className="h-4 w-4 text-green-600 dark:text-green-400 gradient:text-green-400" />
-                    <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                      In Cart ({cartItem.quantity}x)
-                    </span>
-                  </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between">
                   <Button 
-                    onClick={() => onRemoveFromCart(listing)} 
                     variant="outline" 
-                    className="w-full bg-accent text-white hover:bg-accent/90 border-accent" 
                     size="sm"
-                    disabled={isLoading}
+                    onClick={() => onViewListing?.(listing)}
+                    className="flex-1 mr-2"
                   >
-                    {isLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Minus className="mr-2 h-4 w-4" />
-                    )}
-                    {isLoading ? 'Removing...' : 'Remove from Cart'}
+                    <Eye className="h-3 w-3 mr-1" />
+                    View Details
+                  </Button>
+                  
+                  {isSoldOut ? (
+                    <Badge variant="destructive" className="text-xs">
+                      Sold Out
+                    </Badge>
+                  ) : cartItem ? (
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onRemoveFromCart(listing)}
+                        disabled={cartLoadingStates[listing.id]}
+                        className="h-8 w-8 p-0"
+                      >
+                        {cartLoadingStates[listing.id] ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Minus className="h-3 w-3" />
+                        )}
+                      </Button>
+                      <span className="text-sm font-medium min-w-[20px] text-center">
+                        {cartItem.quantity}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onAddToCart(listing)}
+                        disabled={cartLoadingStates[listing.id]}
+                        className="h-8 w-8 p-0"
+                      >
+                        {cartLoadingStates[listing.id] ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Plus className="h-3 w-3" />
+                        )}
                   </Button>
                 </div>
               ) : (
                 <Button 
+                      size="sm"
                   onClick={() => onAddToCart(listing)} 
-                  className="w-full bg-accent text-white hover:bg-accent/90" 
-                  size="sm"
-                  disabled={isSoldOut || isLoading}
+                      disabled={cartLoadingStates[listing.id]}
                 >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {cartLoadingStates[listing.id] ? (
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                   ) : (
-                    <Plus className="mr-2 h-4 w-4" />
+                        <Plus className="h-3 w-3 mr-1" />
+                      )}
+                      Add
+                    </Button>
                   )}
-                  {isLoading ? 'Adding...' : isSoldOut ? 'Sold Out' : 'Add to Cart'}
-                </Button>
-              )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         )

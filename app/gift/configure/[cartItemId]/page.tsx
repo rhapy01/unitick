@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
 import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Gift, Wallet, Mail, Phone, MessageSquare, Calendar, AlertCircle, Check } from "lucide-react"
+import { ArrowLeft, Wallet, Mail, Phone, MessageSquare, Calendar, AlertCircle, Check } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { sanitizeUserInput } from "@/lib/sanitize"
@@ -112,6 +112,30 @@ export default function GiftConfigurePage({ params }: { params: Promise<{ cartIt
       return
     }
 
+    // Get current user to check for self-gift
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    // Get current user's profile to check email
+    const { data: currentUserProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', user.id)
+      .single()
+
+    // Prevent self-gifts
+    if (currentUserProfile?.email && recipientEmail.toLowerCase() === currentUserProfile.email.toLowerCase()) {
+      toast({
+        title: "Cannot Gift to Yourself",
+        description: "Please enter a different recipient email. You cannot purchase a gift for yourself.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSaving(true)
 
     try {
@@ -176,9 +200,6 @@ export default function GiftConfigurePage({ params }: { params: Promise<{ cartIt
           </div>
 
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Gift className="w-6 h-6 text-primary" />
-            </div>
             <div>
               <h1 className="text-3xl font-bold">Configure Your Gift</h1>
               <p className="text-muted-foreground">Set up the gift details and recipient information</p>

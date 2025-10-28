@@ -15,6 +15,50 @@ import {
   Sparkles,
   CreditCard
 } from "lucide-react"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "UniTick - Multi-Service Booking Platform | Crypto Payments",
+  description: "Book accommodation, car hire, tours, cinema, and events with crypto payments. Earn Unila Miles with every booking! Multi-vendor booking platform with unified NFT tickets.",
+  keywords: [
+    "crypto booking",
+    "multi-service booking", 
+    "NFT tickets",
+    "blockchain payments",
+    "accommodation booking",
+    "car hire",
+    "tours",
+    "cinema tickets",
+    "event tickets",
+    "cryptocurrency payments",
+    "UniTick",
+    "Unila Miles",
+    "decentralized booking"
+  ],
+  openGraph: {
+    title: "UniTick - Multi-Service Booking Platform | Crypto Payments",
+    description: "Book accommodation, car hire, tours, cinema, and events with crypto payments. Earn Unila Miles with every booking!",
+    type: "website",
+    url: "/",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "UniTick - Multi-Service Booking Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UniTick - Multi-Service Booking Platform | Crypto Payments",
+    description: "Book accommodation, car hire, tours, cinema, and events with crypto payments. Earn Unila Miles with every booking!",
+    images: ["/og-image.jpg"],
+  },
+  alternates: {
+    canonical: "/",
+  },
+}
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -38,6 +82,71 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "UniTick",
+            "description": "Multi-service booking platform with crypto payments and NFT tickets",
+            "url": process.env.NEXT_PUBLIC_SITE_URL || "https://unitick.app",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": `${process.env.NEXT_PUBLIC_SITE_URL || "https://unitick.app"}/shop?q={search_term_string}`
+              },
+              "query-input": "required name=search_term_string"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "UniTick",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://unitick.app",
+              "logo": {
+                "@type": "ImageObject",
+                "url": `${process.env.NEXT_PUBLIC_SITE_URL || "https://unitick.app"}/logo.png`
+              }
+            },
+            "offers": {
+              "@type": "AggregateOffer",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "itemCondition": "https://schema.org/NewCondition"
+            }
+          })
+        }}
+      />
+      
+      {/* Organization Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "UniTick",
+            "description": "Multi-service booking platform enabling users to book accommodation, car hire, tours, cinema, and events with cryptocurrency payments",
+            "url": process.env.NEXT_PUBLIC_SITE_URL || "https://unitick.app",
+            "logo": `${process.env.NEXT_PUBLIC_SITE_URL || "https://unitick.app"}/logo.png`,
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "availableLanguage": "English"
+            },
+            "sameAs": [
+              "https://twitter.com/unitick",
+              "https://linkedin.com/company/unitick"
+            ],
+            "foundingDate": "2024",
+            "industry": "Travel Technology",
+            "numberOfEmployees": "1-10",
+            "areaServed": "Worldwide"
+          })
+        }}
+      />
+
       <Header />
 
       <main>
@@ -196,21 +305,21 @@ export default async function HomePage() {
                   {/* Visual Example */}
                   <div className="grid grid-cols-5 gap-4 items-center my-8">
                     <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-accent">
+                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-white">
                         A
                       </div>
                       <p className="text-xs text-muted-foreground">Hotel Service</p>
                     </div>
-                    <div className="text-center text-2xl text-accent font-bold">+</div>
+                    <div className="text-center text-2xl text-white font-bold">+</div>
                     <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-accent">
+                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-white">
                         B
                       </div>
                       <p className="text-xs text-muted-foreground">Tour Service</p>
                     </div>
-                    <div className="text-center text-2xl text-accent font-bold">+</div>
+                    <div className="text-center text-2xl text-white font-bold">+</div>
                     <div className="text-center">
-                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-accent">
+                      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-white">
                         C
                       </div>
                       <p className="text-xs text-muted-foreground">Car Rental</p>

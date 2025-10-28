@@ -32,6 +32,10 @@ interface TicketData {
     name: string
     email: string
   }
+  buyer?: {
+    name: string
+    email: string
+  } | null
   bookings: Array<{
     id: string
     serviceTitle: string
@@ -189,6 +193,26 @@ export default function VerifyTicketPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Buyer Info - Only show for gift orders */}
+              {ticketData.buyer && (
+                <div className="pt-4 border-t">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Booked By
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Buyer Name</p>
+                      <p>{ticketData.buyer.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Buyer Email</p>
+                      <p className="text-sm">{ticketData.buyer.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Transaction Info */}
               {ticketData.transactionHash && (

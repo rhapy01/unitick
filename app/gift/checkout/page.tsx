@@ -9,7 +9,7 @@ import { PLATFORM_FEE_PERCENTAGE, SERVICE_TYPES } from "@/lib/constants"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Wallet, ArrowLeft, Gift, AlertCircle, CheckCircle2, Settings } from "lucide-react"
+import { Wallet, ArrowLeft, AlertCircle, CheckCircle2, Settings } from "lucide-react"
 import Link from "next/link"
 import { sanitizeUserInput, sanitizePrice, sanitizeQuantity } from "@/lib/sanitize"
 
@@ -180,14 +180,9 @@ export default function GiftCheckoutPage() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Gift className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Gift Checkout</h1>
-              <p className="text-muted-foreground">Review your gift purchases and complete payment</p>
-            </div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Gift Checkout</h1>
+            <p className="text-muted-foreground">Review your gift purchases and complete payment</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -199,7 +194,6 @@ export default function GiftCheckoutPage() {
                   <Card key={index} className="border-primary/20">
                     <CardHeader>
                       <div className="flex items-center gap-2">
-                        <Gift className="h-5 w-5 text-primary" />
                         <CardTitle className="text-lg">Gift Item</CardTitle>
                         <Badge variant="secondary" className="ml-auto">
                           {SERVICE_TYPES[item.listing.service_type]}
@@ -208,68 +202,68 @@ export default function GiftCheckoutPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Service Details */}
-                      <div className="flex gap-4">
+                      <div className="flex gap-3 sm:gap-4 overflow-hidden">
                         {item.listing.images?.[0] && (
                           <img
                             src={item.listing.images[0]}
                             alt={sanitizeUserInput(item.listing.title)}
-                            className="w-24 h-24 rounded-lg object-cover"
+                            className="w-16 h-16 sm:w-24 sm:h-24 rounded-lg object-cover flex-shrink-0"
                           />
                         )}
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-1">{sanitizeUserInput(item.listing.title)}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base sm:text-lg mb-1 break-words">{sanitizeUserInput(item.listing.title)}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">
                             {sanitizeUserInput(item.listing.vendor?.business_name)}
                           </p>
-                          <p className="text-sm text-muted-foreground mb-3">{sanitizeUserInput(item.listing.location)}</p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span>Quantity: {sanitizeQuantity(item.quantity)}</span>
-                            <span className="font-semibold text-primary">${sanitizePrice(itemTotal).toFixed(2)}</span>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3 break-words">{sanitizeUserInput(item.listing.location)}</p>
+                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                            <span className="whitespace-nowrap">Quantity: {sanitizeQuantity(item.quantity)}</span>
+                            <span className="font-semibold text-primary whitespace-nowrap">${sanitizePrice(itemTotal).toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Recipient Information */}
-                      <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-semibold flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            Gift Recipient
+                      <div className="p-3 sm:p-4 bg-primary/5 rounded-lg border border-primary/20">
+                        <div className="flex items-center justify-between mb-3 gap-2">
+                          <h4 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
+                            <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                            <span className="truncate">Gift Recipient</span>
                           </h4>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/gift/configure/${item._id}`)}
-                            className="gap-2"
+                            className="gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
                           >
-                            <Settings className="h-4 w-4" />
-                            Configure
+                            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Configure</span>
                           </Button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
+                          <div className="min-w-0">
                             <span className="text-muted-foreground">Name:</span>
-                            <span className="ml-2 font-medium">{sanitizeUserInput(item.recipient_name)}</span>
+                            <span className="ml-2 font-medium break-words">{sanitizeUserInput(item.recipient_name)}</span>
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <span className="text-muted-foreground">Email:</span>
-                            <span className="ml-2 font-medium">{sanitizeUserInput(item.recipient_email)}</span>
+                            <span className="ml-2 font-medium break-all">{sanitizeUserInput(item.recipient_email)}</span>
                           </div>
                           {item.recipient_phone && (
-                            <div>
+                            <div className="min-w-0">
                               <span className="text-muted-foreground">Phone:</span>
-                              <span className="ml-2 font-medium">{sanitizeUserInput(item.recipient_phone)}</span>
+                              <span className="ml-2 font-medium break-words">{sanitizeUserInput(item.recipient_phone)}</span>
                             </div>
                           )}
-                          <div>
+                          <div className="min-w-0 md:col-span-2">
                             <span className="text-muted-foreground">Wallet:</span>
-                            <span className="ml-2 font-mono text-xs">{sanitizeUserInput(item.recipient_wallet)?.slice(0, 10)}...</span>
+                            <span className="ml-2 font-mono text-xs break-all">{sanitizeUserInput(item.recipient_wallet)?.slice(0, 10)}...</span>
                           </div>
                         </div>
                         {item.gift_message && (
-                          <div className="mt-3 pt-3 border-t border-primary/20">
-                            <span className="text-muted-foreground text-sm">Message:</span>
-                            <p className="mt-1 text-sm italic">"{sanitizeUserInput(item.gift_message)}"</p>
+                          <div className="mt-3 pt-3 border-t border-primary/20 min-w-0">
+                            <span className="text-muted-foreground text-xs sm:text-sm">Message:</span>
+                            <p className="mt-1 text-xs sm:text-sm italic break-words">"{sanitizeUserInput(item.gift_message)}"</p>
                           </div>
                         )}
                       </div>
@@ -326,7 +320,7 @@ export default function GiftCheckoutPage() {
                   </div>
 
                   <div className="p-3 bg-[#E4405F]/10 rounded-lg border border-[#E4405F]/30">
-                    <p className="text-sm text-[#E4405F] font-medium mb-1">🎁 Gift Purchase</p>
+                    <p className="text-sm text-[#E4405F] font-medium mb-1">Gift Purchase</p>
                     <p className="text-xs text-muted-foreground">
                       NFT tickets will be minted to recipient wallets after payment
                     </p>

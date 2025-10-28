@@ -10,7 +10,7 @@ import { PLATFORM_FEE_PERCENTAGE } from "@/lib/constants"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Wallet, CheckCircle2, AlertCircle, Loader2, ArrowLeft, Settings, RefreshCw } from "lucide-react"
+import { Wallet, AlertCircle, Loader2, ArrowLeft, Settings, RefreshCw } from "lucide-react"
 import Link from "next/link"
 import { formatAddress } from "@/lib/wallet"
 import { sanitizeUserInput, sanitizeTransactionHash, sanitizePrice, sanitizeQuantity, safeJsonStringify } from "@/lib/sanitize"
@@ -59,21 +59,13 @@ export default function PaymentPage() {
       setProfile(profileData)
       setWalletAddress((profileData as any).wallet_address || null)
 
-      // Get selected item IDs from localStorage
-      const selectedItemIds = localStorage.getItem("selectedCartItems")
-      if (!selectedItemIds) {
-        router.push("/checkout")
-        return
-      }
-
-      const selectedIds = JSON.parse(selectedItemIds)
-      console.log('[Payment Init] Selected cart item IDs:', selectedIds)
-
+      // Get cart items for payment processing
+      // For gift orders: process all gift items
+      // For regular orders: process all non-gift items
       const { data, error } = await supabase
         .from("cart_items")
-        .select("id, quantity, booking_date, is_gift, recipient_name, recipient_email, recipient_phone, listing:listings(*, vendor:vendors(*))")
+        .select("id, quantity, booking_date, is_gift, recipient_name, recipient_email, recipient_phone, recipient_wallet, listing:listings(*, vendor:vendors(*))")
         .eq("user_id", user.id)
-        .in("id", selectedIds)
 
       if (error) {
         router.push("/checkout")
@@ -89,11 +81,12 @@ export default function PaymentPage() {
         recipient_name: row.recipient_name ?? undefined,
         recipient_email: row.recipient_email ?? undefined,
         recipient_phone: row.recipient_phone ?? undefined,
+        recipient_wallet: row.recipient_wallet ?? undefined,
       }))
 
       console.log('[Payment Init] Cart items loaded:', items.length)
       items.forEach((item, index) => {
-        console.log(`[Payment Init] Item ${index}: listing_id=${item.listing.id}, quantity=${item.quantity}`)
+        console.log(`[Payment Init] Item ${index}: listing_id=${item.listing.id}, quantity=${item.quantity}, is_gift=${item.is_gift}`)
       })
 
       if (items.length === 0) {
@@ -101,7 +94,33 @@ export default function PaymentPage() {
         return
       }
 
-      setCartItems(items)
+      // Determine order type and filter items
+      const giftItems = items.filter(item => item.is_gift)
+      const regularItems = items.filter(item => !item.is_gift)
+      
+      let itemsToProcess: CartItem[]
+      
+      if (giftItems.length > 0 && regularItems.length > 0) {
+        // Mixed order - this shouldn't happen in current flow, redirect to cart
+        console.log('[Payment Init] Mixed gift/regular order detected, redirecting to cart')
+        router.push("/cart")
+        return
+      } else if (giftItems.length > 0) {
+        // Gift order
+        itemsToProcess = giftItems
+        console.log('[Payment Init] Processing gift order with', itemsToProcess.length, 'items')
+      } else {
+        // Regular order
+        itemsToProcess = regularItems
+        console.log('[Payment Init] Processing regular order with', itemsToProcess.length, 'items')
+      }
+
+      if (itemsToProcess.length === 0) {
+        router.push("/checkout")
+        return
+      }
+
+      setCartItems(itemsToProcess)
       
       setIsLoading(false)
     }
@@ -158,11 +177,15 @@ export default function PaymentPage() {
         setTokenStatus(result)
         console.log('[Payment] Token status:', result)
         
-        // Check if allowance is sufficient for the total amount
+        // Check if allowance is sufficient for the total amount + platform fee
         const totalAmount = calculateTotal()
         
+        // Calculate platform fee (0.5%) - same as backend
+        const platformFeeInTokens = totalAmount * 0.005 // 0.5%
+        const totalWithFee = totalAmount + platformFeeInTokens
+        
         // Convert to wei using string manipulation to avoid precision issues
-        const amountStr = totalAmount.toString()
+        const amountStr = totalWithFee.toString()
         const [integerPart, decimalPart = ''] = amountStr.split('.')
         const paddedDecimal = decimalPart.padEnd(18, '0').slice(0, 18)
         const amountInWei = integerPart + paddedDecimal
@@ -172,6 +195,8 @@ export default function PaymentPage() {
         
         console.log('[Payment] Allowance check:', {
           totalAmount,
+          platformFeeInTokens,
+          totalWithFee,
           requiredAllowance: requiredAllowance.toString(),
           currentAllowance: currentAllowance.toString(),
           needsApproval: currentAllowance < requiredAllowance
@@ -206,11 +231,15 @@ export default function PaymentPage() {
     try {
       console.log('[Payment] Starting token approval...')
       
-      // Calculate required amount using the same method as the working token approval component
+      // Calculate required amount using the same method as the backend
       const totalAmount = calculateTotal()
       
+      // Calculate platform fee (0.5%) - same as backend
+      const platformFeeInTokens = totalAmount * 0.005 // 0.5%
+      const totalWithFee = totalAmount + platformFeeInTokens
+      
       // Convert to wei using string manipulation to avoid precision issues
-      const amountStr = totalAmount.toString()
+      const amountStr = totalWithFee.toString()
       const [integerPart, decimalPart = ''] = amountStr.split('.')
       
       // Pad decimal part to 18 digits
@@ -221,6 +250,9 @@ export default function PaymentPage() {
       const requiredAllowance = BigInt(amountInWei)
       
       console.log('[Payment] Amount conversion:', {
+        totalAmount,
+        platformFeeInTokens,
+        totalWithFee,
         original: amountStr,
         integerPart,
         decimalPart,
@@ -249,7 +281,7 @@ export default function PaymentPage() {
       }
 
       console.log('[Payment] Token approval successful!')
-      setErrorMessage('✅ Tokens approved successfully! You can now proceed with payment.')
+      setErrorMessage('Tokens approved successfully! You can now proceed with payment.')
       
       // Switch to payment button
       setNeedsApproval(false)
@@ -311,9 +343,6 @@ export default function PaymentPage() {
         setPaymentStatus("success")
         console.log('[Payment] Payment completed successfully')
 
-        // Clear selected items from localStorage
-        localStorage.removeItem("selectedCartItems")
-        
         // Note: Cart items are already cleared by the backend payment API
         console.log('[Payment] Cart items cleared by backend payment API')
 
@@ -492,20 +521,15 @@ export default function PaymentPage() {
                   {paymentStatus === "success" && (
                     <div className="relative overflow-hidden rounded-lg border-2 border-green-500 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 p-6 shadow-lg">
                       <div className="flex items-center gap-4">
-                        <div className="flex-shrink-0">
-                          <CheckCircle2 className="h-8 w-8 text-white" />
-                        </div>
                         <div className="flex-1">
                           <h3 className="text-white font-bold text-xl mb-2">
-                            ✅ Payment Confirmed!
+                            Payment Confirmed!
                           </h3>
                           <p className="text-green-100 text-base">
                             Your order has been successfully processed. Redirecting to order details...
                           </p>
                         </div>
                       </div>
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
                     </div>
                   )}
 
@@ -524,7 +548,6 @@ export default function PaymentPage() {
                           </>
                         ) : (
                           <>
-                            <Settings className="h-4 w-4 mr-2" />
                             Approve UTICK Tokens
                           </>
                         )}

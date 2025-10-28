@@ -6,7 +6,7 @@
 // Base Sepolia Testnet Contract Addresses
 export const CONTRACT_ADDRESSES = {
   // Main payment and NFT contract
-  UNILABOOK: "0xc4e90Dcd9Da001Dc463570d66d8281821De58D5C",
+  UNILABOOK: "0xf3b0fc3021a28e75deEe5c1bbba3A7a714eE9C79",
 
   // Stablecoin contract
   UNITICK: "0xA3f4990edBc6aB2c6bafe5DAd9fB4ff1C48f17e7",

@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
                     .from("bookings")
                     .insert({
                       id: crypto.randomUUID(),
+                      order_id: dbOrder.id, // Link booking to order
                       user_id: await getUserIdFromWallet(supabase, buyer),
                       listing_id: cartItem.listing.id,
                       vendor_id: cartItem.listing.vendor_id,

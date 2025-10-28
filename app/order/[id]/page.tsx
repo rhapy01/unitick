@@ -9,7 +9,7 @@ import type { Order, Booking } from "@/lib/types"
 import { SERVICE_TYPES } from "@/lib/constants"
 import { useEffect, useState } from "react"
 import { use } from "react"
-import { CheckCircle2, Download, Calendar, MapPin, Building } from "lucide-react"
+import { CheckCircle2, Download, Calendar, MapPin, Building, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import QRCode from "qrcode"
 import { PDFDownloadLink } from '@react-pdf/renderer'
@@ -99,15 +99,35 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             message: bookingsError.message,
             details: bookingsError.details,
             hint: bookingsError.hint,
-            code: bookingsError.code
+            code: bookingsError.code,
+            fullError: JSON.stringify(bookingsError, null, 2),
+            bookingIds: bookingIds,
+            orderId: id
           })
-          // Don't return here, just log the error and continue
+          setError(`Failed to fetch bookings: ${bookingsError.message || 'Unknown error'}. Please ensure the RLS policy allows users to view bookings in their orders.`)
+          setIsLoading(false)
+          return
         } else {
           console.log('🔍 Raw bookings data from Supabase:', bookingsData)
+          console.log('🔍 First booking recipient fields:', bookingsData?.[0] ? {
+            is_gift: bookingsData[0].is_gift,
+            recipient_name: bookingsData[0].recipient_name,
+            recipient_email: bookingsData[0].recipient_email,
+            recipient_wallet: bookingsData[0].recipient_wallet,
+            gift_message: bookingsData[0].gift_message
+          } : 'No bookings')
           setBookings(bookingsData || [])
           
           // Get customer information - check if this is a gift order first
           const hasGiftBookings = bookingsData.some(booking => booking.is_gift)
+          
+          console.log('🔍 Order analysis:', {
+            orderId: id,
+            hasGiftBookings,
+            bookingsCount: bookingsData?.length || 0,
+            giftBookings: bookingsData?.filter(b => b.is_gift) || [],
+            allBookingsWithRecipientInfo: bookingsData?.filter(b => b.recipient_name || b.recipient_email) || []
+          })
           
           // Always get buyer information for vendor records
           const { data: buyerData, error: buyerError } = await supabase
@@ -123,17 +143,54 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             })
           }
           
-          if (hasGiftBookings) {
+          // Determine customer information - prioritize gift recipient info
+          const hasRecipientInfo = bookingsData.some(booking => 
+            booking.recipient_name || booking.recipient_email
+          )
+          
+          if (hasGiftBookings || hasRecipientInfo) {
             // For gift orders, use recipient information as primary customer
-            const giftBooking = bookingsData.find(booking => booking.is_gift)
-            if (giftBooking) {
-              setCustomer({
+            const giftBooking = bookingsData.find(booking => 
+              booking.is_gift || (booking.recipient_name || booking.recipient_email)
+            )
+            console.log('🎁 Gift booking found:', giftBooking)
+            console.log('🎁 Gift booking recipient fields:', giftBooking ? {
+              is_gift: giftBooking.is_gift,
+              recipient_name: giftBooking.recipient_name,
+              recipient_email: giftBooking.recipient_email,
+              recipient_wallet: giftBooking.recipient_wallet
+            } : 'No gift booking found')
+            
+            if (giftBooking && (giftBooking.recipient_name || giftBooking.recipient_email)) {
+              const recipientInfo = {
                 name: giftBooking.recipient_name || 'Unknown',
                 email: giftBooking.recipient_email || 'Unknown'
-              })
+              }
+              console.log('🎁 Setting customer to recipient:', recipientInfo)
+              console.log('🎁 Buyer info:', buyerData)
+              
+              // Check if recipient and buyer are the same person
+              if (buyerData && recipientInfo.email.toLowerCase() === buyerData.email.toLowerCase()) {
+                console.warn('⚠️ WARNING: Gift recipient and buyer have the same email! This might be a self-gift or data issue.')
+                console.warn('Recipient:', recipientInfo)
+                console.warn('Buyer:', buyerData)
+              }
+              
+              setCustomer(recipientInfo)
+            } else {
+              // Fallback to buyer if no recipient info found
+              console.log('🎁 No recipient info found, falling back to buyer')
+              console.log('🎁 Gift booking was:', giftBooking)
+              if (buyerData) {
+                setCustomer({
+                  name: buyerData.full_name || 'Unknown',
+                  email: buyerData.email || 'Unknown'
+                })
+              }
             }
           } else {
             // Regular order - use buyer's information as customer
+            console.log('🛒 Regular order - using buyer info:', buyerData)
             if (buyerData) {
               setCustomer({
                 name: buyerData.full_name || 'Unknown',
@@ -211,6 +268,9 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   const pdfBookings = bookings.map(booking => {
     console.log('🔍 Booking data for PDF:', {
       bookingId: booking.id,
+      isGift: booking.is_gift,
+      recipientName: booking.recipient_name,
+      recipientEmail: booking.recipient_email,
       listingTitle: booking.listing?.title,
       vendorData: booking.listing?.vendor,
       vendorBusinessName: booking.listing?.vendor?.business_name,
@@ -224,6 +284,11 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       quantity: booking.quantity,
       total_amount: booking.total_amount,
       booking_date: booking.booking_date,
+      is_gift: booking.is_gift,
+      recipient_name: booking.recipient_name,
+      recipient_email: booking.recipient_email,
+      recipient_phone: booking.recipient_phone,
+      gift_message: booking.gift_message,
       listing: {
         title: booking.listing?.title || 'Unknown Service',
         service_type: booking.listing?.service_type || 'event',
@@ -315,7 +380,6 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <CheckCircle2 className="h-16 w-16 text-accent mx-auto mb-4" />
             <h1 className="text-3xl font-bold mb-2">Booking Confirmed!</h1>
             <p className="text-muted-foreground">Your order has been successfully processed</p>
           </div>
@@ -356,7 +420,16 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             {/* Customer Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Customer Information</CardTitle>
+                <CardTitle>
+                  {bookings.some(booking => booking.is_gift) ? (
+                    <div className="flex items-center gap-2">
+                      <span>Gift Recipient Information</span>
+                      <Badge variant="secondary" className="text-xs">🎁 Gift</Badge>
+                    </div>
+                  ) : (
+                    "Customer Information"
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -380,6 +453,15 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                       <span className="text-muted-foreground">Buyer Email:</span>
                       <span className="font-medium">{buyer.email}</span>
                     </div>
+                    {/* Show warning if customer and buyer are the same */}
+                    {customer && buyer && customer.email.toLowerCase() === buyer.email.toLowerCase() && (
+                      <div className="pt-2 border-t border-border">
+                        <div className="flex items-center gap-2 text-amber-600">
+                          <AlertCircle className="h-4 w-4" />
+                          <span className="text-xs font-medium">Same person as recipient</span>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </CardContent>
@@ -404,7 +486,14 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                     Download QR Code
                   </Button>
         {order && customer && qrCodeUrl && (
-          <PDFDownloadLink
+          <>
+            {console.log('🎫 PDF Generation Debug:', {
+              customer: customer,
+              buyer: buyer,
+              hasGiftBookings: pdfBookings.some(b => b.is_gift),
+              pdfBookingsCount: pdfBookings.length
+            })}
+            <PDFDownloadLink
             document={
               <TicketPDF
                 order={order}
@@ -423,6 +512,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
               </Button>
             )}
           </PDFDownloadLink>
+          </>
         )}
                 </div>
               </CardContent>
@@ -436,40 +526,58 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             <CardContent>
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="flex gap-4 pb-4 border-b border-border last:border-0">
-                    <div className="w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                      {booking.listing?.images?.[0] && (
-                        <img
-                          src={booking.listing.images[0] || "/placeholder.svg"}
-                          alt={booking.listing.title}
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-semibold">{booking.listing?.title}</h3>
-                        <Badge variant="secondary">{SERVICE_TYPES[booking.listing?.service_type || "event"]}</Badge>
+                  <div key={booking.id} className="border rounded-lg p-3 sm:p-4 bg-card/50">
+                    {/* Mobile-first layout */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {/* Image */}
+                      <div className="w-full sm:w-20 h-32 sm:h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        {booking.listing?.images?.[0] ? (
+                          <img
+                            src={booking.listing.images[0]}
+                            alt={booking.listing.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+                            <span className="text-2xl">📋</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3 text-muted-foreground" />
-                          <span>{booking.listing?.location}</span>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Title and Badge */}
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <h3 className="font-semibold text-base sm:text-lg line-clamp-2">{booking.listing?.title}</h3>
+                          <Badge variant="secondary" className="text-xs w-fit">{SERVICE_TYPES[booking.listing?.service_type || "event"]}</Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
-                          <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
+
+                        {/* Details Grid */}
+                        <div className="space-y-2 text-sm text-muted-foreground mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Location:</span>
+                            <span className="truncate">{booking.listing?.location}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Date:</span>
+                            <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Service Provider:</span>
+                            <span className="truncate">{booking.listing?.vendor?.business_name || 'Unknown Vendor'}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Building className="h-3 w-3 text-muted-foreground" />
-                          <span>{booking.listing?.vendor?.business_name || 'Unknown Vendor'}</span>
+
+                        {/* Price and Quantity */}
+                        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                          <div className="text-sm">
+                            <span className="text-muted-foreground">Qty: </span>
+                            <span className="font-medium">{booking.quantity}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-base text-primary">${booking.total_amount.toFixed(2)}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-2 text-sm">
-                        <span className="text-muted-foreground">Quantity: </span>
-                        <span>{booking.quantity}</span>
-                        <span className="mx-2">•</span>
-                        <span className="font-semibold">${booking.total_amount.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

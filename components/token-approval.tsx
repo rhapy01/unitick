@@ -190,8 +190,7 @@ export default function TokenApproval({ userId, onApprovalComplete }: TokenAppro
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <RefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+        <CardTitle>
           UniTick Token Approval
         </CardTitle>
         <CardDescription>

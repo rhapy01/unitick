@@ -32,36 +32,92 @@ export default function ClaimGiftPage({ params }: { params: Promise<{ token: str
     const fetchGiftData = async () => {
       setIsLoading(true)
       
-      // In a real implementation, you'd decode the token to get gift information
-      // For now, we'll simulate fetching gift data
       try {
-        // This would be replaced with actual token decoding and database lookup
-        const mockGiftData = {
-          id: "gift-123",
-          buyer_name: "John Doe",
-          services: [
-            {
-              title: "Luxury Hotel Stay",
-              vendor: "Grand Hotel",
-              quantity: 2,
-              price: 150.00,
-              booking_date: "2024-02-15"
-            },
-            {
-              title: "City Tour",
-              vendor: "Explore Tours",
-              quantity: 1,
-              price: 75.00,
-              booking_date: "2024-02-16"
-            }
-          ],
-          total_amount: 225.00,
-          gift_message: "Happy Birthday! Hope you enjoy this amazing trip!",
-          nft_contract_address: "0x1234...",
-          nft_token_ids: ["1", "2"]
+        // Fetch gift data from database using the token (which is the booking ID)
+        const { data: booking, error } = await supabase
+          .from('bookings')
+          .select(`
+            id,
+            listing:listings(
+              id,
+              title,
+              price,
+              vendor:vendors(
+                id,
+                business_name
+              )
+            ),
+            quantity,
+            total_amount,
+            booking_date,
+            is_gift,
+            recipient_name,
+            recipient_email,
+            recipient_wallet,
+            gift_message,
+            nft_contract_address,
+            nft_token_id,
+            status,
+            order_items(
+              order:orders(
+                id,
+                user_id,
+                profiles:user_id(
+                  full_name,
+                  email
+                )
+              )
+            )
+          `)
+          .eq('id', token)
+          .eq('is_gift', true)
+          .single()
+
+        if (error) {
+          console.error('Error fetching gift data:', error)
+          toast({
+            title: "Invalid Gift",
+            description: "This gift link is invalid or has expired",
+            variant: "destructive",
+          })
+          router.push("/")
+          return
+        }
+
+        if (!booking) {
+          toast({
+            title: "Gift Not Found",
+            description: "This gift could not be found",
+            variant: "destructive",
+          })
+          router.push("/")
+          return
+        }
+
+        // Get buyer information from the order
+        const buyerData = booking.order_items?.[0]?.order?.profiles
+        const buyerName = buyerData?.full_name || 'Someone'
+
+        // Format the gift data
+        const giftData = {
+          id: booking.id,
+          buyer_name: buyerName,
+          services: [{
+            title: booking.listing?.title || 'Service',
+            vendor: booking.listing?.vendor?.business_name || 'Vendor',
+            quantity: booking.quantity,
+            price: booking.total_amount / booking.quantity,
+            booking_date: booking.booking_date
+          }],
+          total_amount: booking.total_amount,
+          gift_message: booking.gift_message,
+          nft_contract_address: booking.nft_contract_address,
+          nft_token_id: booking.nft_token_id,
+          recipient_wallet: booking.recipient_wallet,
+          status: booking.status
         }
         
-        setGiftData(mockGiftData)
+        setGiftData(giftData)
       } catch (error) {
         console.error("Error fetching gift data:", error)
         toast({
@@ -76,7 +132,7 @@ export default function ClaimGiftPage({ params }: { params: Promise<{ token: str
     }
 
     fetchGiftData()
-  }, [token, router, toast])
+  }, [token, router, toast, supabase])
 
   const handleClaimGift = async () => {
     // Validation
@@ -92,22 +148,93 @@ export default function ClaimGiftPage({ params }: { params: Promise<{ token: str
     setIsClaiming(true)
 
     try {
-      // In a real implementation, you'd update the gift record with claimer details
-      // and transfer the NFT to the claimer's wallet
+      // Check if user is authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
       
-      // Simulate claiming process
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (authError || !user) {
+        // User needs to sign up/login first
+        toast({
+          title: "Authentication Required",
+          description: "Please sign up or log in to claim your gift",
+          variant: "destructive",
+        })
+        router.push(`/auth/signup?email=${encodeURIComponent(giftData?.recipient_email || '')}`)
+        return
+      }
+
+      // Update the gift booking with claimer details
+      const { error: updateError } = await supabase
+        .from('bookings')
+        .update({
+          claimed_at: new Date().toISOString(),
+          claimed_by: user.id,
+          claimer_name: claimData.name,
+          claimer_phone: claimData.phone,
+          claimer_message: claimData.message,
+          status: 'claimed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', token)
+        .eq('is_gift', true)
+
+      if (updateError) {
+        throw new Error(`Failed to update gift record: ${updateError.message}`)
+      }
+
+      // Update user profile if needed
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: claimData.name,
+          phone: claimData.phone || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (profileError) {
+        console.warn('Failed to update user profile:', profileError)
+        // Don't fail the claim if profile update fails
+      }
+
+      // Send thank you notification to the buyer
+      try {
+        const { data: buyerProfile } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', giftData?.order_items?.[0]?.order?.user_id)
+          .single()
+
+        if (buyerProfile) {
+          // Send notification to buyer that gift was claimed
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: buyerProfile.email,
+              subject: 'Your Gift Has Been Claimed!',
+              template: 'gift-claimed',
+              data: {
+                buyerName: buyerProfile.full_name,
+                recipientName: claimData.name,
+                serviceTitle: giftData?.services?.[0]?.title,
+                thankYouMessage: claimData.message
+              }
+            }
+          })
+        }
+      } catch (emailError) {
+        console.warn('Failed to send thank you notification:', emailError)
+        // Don't fail the claim if email fails
+      }
       
       setIsClaimed(true)
       toast({
-        title: "Gift Claimed!",
-        description: "Your NFT tickets have been transferred to your wallet",
+        title: "Gift Claimed Successfully!",
+        description: "Your NFT tickets are now in your wallet. Check your dashboard to view them.",
       })
     } catch (error) {
       console.error("Error claiming gift:", error)
       toast({
         title: "Error",
-        description: "Failed to claim gift. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to claim gift. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -163,7 +290,7 @@ export default function ClaimGiftPage({ params }: { params: Promise<{ token: str
                 <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-green-500" />
                 <h1 className="text-2xl font-bold mb-2">Gift Claimed Successfully!</h1>
                 <p className="text-muted-foreground mb-6">
-                  Your NFT tickets have been transferred to your wallet. Check your wallet to view your tickets.
+                  Your NFT tickets are already in your wallet! Check your dashboard to view your tickets.
                 </p>
                 <div className="space-y-4">
                   <Button asChild>
@@ -285,8 +412,8 @@ export default function ClaimGiftPage({ params }: { params: Promise<{ token: str
                   <div className="text-sm">
                     <p className="font-medium mb-1">About NFT Tickets</p>
                     <p className="text-muted-foreground">
-                      Your tickets will be minted as NFTs and transferred to your wallet. 
-                      You'll need a crypto wallet to receive and use your tickets.
+                      Your NFT tickets are already minted and in your wallet! 
+                      You can view and use them in your dashboard.
                     </p>
                   </div>
                 </div>

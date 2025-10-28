@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Wallet, ArrowLeft, Gift, AlertCircle, CheckCircle2, Plus } from "lucide-react"
+import { Wallet, ArrowLeft, AlertCircle, CheckCircle2, Plus } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import { sanitizeUserInput, sanitizePrice, sanitizeQuantity } from "@/lib/sanitize"
@@ -158,6 +158,40 @@ export default function SimpleGiftCheckoutPage() {
       }
     }
 
+    // Get current user to check for self-gift
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    // Get current user's profile to check email
+    const { data: currentUserProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', user.id)
+      .single()
+
+    let recipientEmail = ""
+    if (useNewRecipient) {
+      recipientEmail = newRecipient.email.toLowerCase()
+    } else {
+      const recipient = savedRecipients.find(r => r.id === selectedRecipient)
+      if (recipient) {
+        recipientEmail = recipient.email.toLowerCase()
+      }
+    }
+
+    // Prevent self-gifts
+    if (currentUserProfile?.email && recipientEmail === currentUserProfile.email.toLowerCase()) {
+      toast({
+        title: "Cannot Gift to Yourself",
+        description: "Please select a different recipient. You cannot purchase a gift for yourself.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSaving(true)
 
     try {
@@ -242,14 +276,9 @@ export default function SimpleGiftCheckoutPage() {
             </Button>
           </div>
 
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Gift className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Gift Checkout</h1>
-              <p className="text-muted-foreground">Select recipient and complete your gift purchase</p>
-            </div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Gift Checkout</h1>
+            <p className="text-muted-foreground">Select recipient and complete your gift purchase</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -266,23 +295,23 @@ export default function SimpleGiftCheckoutPage() {
                     {cartItems.map((item, index) => {
                       const itemTotal = item.listing.price * item.quantity
                       return (
-                        <div key={index} className="flex gap-4 p-4 border rounded-lg">
+                        <div key={index} className="flex gap-3 sm:gap-4 p-3 sm:p-4 border rounded-lg overflow-hidden">
                           {item.listing.images?.[0] && (
                             <img
                               src={item.listing.images[0]}
                               alt={sanitizeUserInput(item.listing.title)}
-                              className="w-20 h-20 rounded-lg object-cover"
+                              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0"
                             />
                           )}
-                          <div className="flex-1">
-                            <h3 className="font-semibold mb-1">{sanitizeUserInput(item.listing.title)}</h3>
-                            <p className="text-sm text-muted-foreground mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold mb-1 text-sm sm:text-base break-words">{sanitizeUserInput(item.listing.title)}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">
                               {sanitizeUserInput(item.listing.vendor?.business_name)}
                             </p>
-                            <div className="flex items-center gap-4 text-sm">
-                              <Badge variant="secondary">{SERVICE_TYPES[item.listing.service_type]}</Badge>
-                              <span>Quantity: {sanitizeQuantity(item.quantity)}</span>
-                              <span className="font-semibold text-primary">${sanitizePrice(itemTotal).toFixed(2)}</span>
+                            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                              <Badge variant="secondary" className="text-xs whitespace-nowrap">{SERVICE_TYPES[item.listing.service_type]}</Badge>
+                              <span className="whitespace-nowrap">Quantity: {sanitizeQuantity(item.quantity)}</span>
+                              <span className="font-semibold text-primary whitespace-nowrap">${sanitizePrice(itemTotal).toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
@@ -375,14 +404,14 @@ export default function SimpleGiftCheckoutPage() {
                     </div>
                   )}
 
-                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <div className="p-4 bg-gray-900 rounded-lg border border-gray-700">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
+                      <AlertCircle className="h-5 w-5 text-green-400 mt-0.5" />
                       <div className="text-sm">
-                        <p className="font-medium mb-1">What happens next?</p>
-                        <p className="text-muted-foreground">
-                          After payment, the recipient will receive an email with instructions to claim their NFT tickets. 
-                          They'll enter their own details (name, phone, etc.) when claiming.
+                        <p className="font-medium mb-1 text-white">What happens next?</p>
+                        <p className="text-gray-300">
+                          After payment, NFT tickets are minted directly to the recipient's wallet address. 
+                          The recipient will receive an email notification and can view their tickets in their dashboard.
                         </p>
                       </div>
                     </div>
@@ -418,7 +447,7 @@ export default function SimpleGiftCheckoutPage() {
                   </div>
 
                   <div className="p-3 bg-[#E4405F]/10 rounded-lg border border-[#E4405F]/30">
-                    <p className="text-sm text-[#E4405F] font-medium mb-1">🎁 Gift Purchase</p>
+                    <p className="text-sm text-[#E4405F] font-medium mb-1">Gift Purchase</p>
                     <p className="text-xs text-muted-foreground">
                       NFT tickets will be minted to recipient's wallet after payment
                     </p>

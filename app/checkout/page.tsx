@@ -59,7 +59,7 @@ export default function CheckoutPage() {
 
       const { data, error } = await supabase
         .from("cart_items")
-        .select("id, quantity, booking_date, listing:listings(*, vendor:vendors(*))")
+        .select("id, quantity, booking_date, is_gift, recipient_name, recipient_email, recipient_phone, recipient_wallet, listing:listings(*, vendor:vendors(*))")
         .eq("user_id", user.id)
 
       if (error) {
@@ -72,6 +72,11 @@ export default function CheckoutPage() {
         listing: row.listing,
         quantity: row.quantity,
         booking_date: row.booking_date,
+        is_gift: row.is_gift,
+        recipient_name: row.recipient_name ?? undefined,
+        recipient_email: row.recipient_email ?? undefined,
+        recipient_phone: row.recipient_phone ?? undefined,
+        recipient_wallet: row.recipient_wallet ?? undefined,
       }))
 
       if (items.length === 0) {
@@ -86,24 +91,12 @@ export default function CheckoutPage() {
         return
       }
 
-      // Check if user came from cart with specific selections
-      const selectedFromCart = localStorage.getItem("selectedCartItems")
-      let itemsToShow: DbCartItem[]
+      // Show all regular (non-gift) items for checkout
+      const itemsToShow = regularItems
 
-      if (selectedFromCart) {
-        // Only show selected items from cart
-        const selectedIds = JSON.parse(selectedFromCart)
-        itemsToShow = regularItems.filter(item => selectedIds.includes(item._id))
-
-        // If no matching items found, redirect back to cart
-        if (itemsToShow.length === 0) {
-          localStorage.removeItem("selectedCartItems")
-          router.push("/cart")
-          return
-        }
-      } else {
-        // Direct access to checkout - show all items
-        itemsToShow = regularItems
+      if (itemsToShow.length === 0) {
+        router.push("/cart")
+        return
       }
 
       setCartItems(itemsToShow)
@@ -158,10 +151,6 @@ export default function CheckoutPage() {
       setFormError("No wallet found. Please ensure you have an internal wallet set up.")
       return
     }
-
-    // All items are selected - store all item IDs for payment page
-    const allItemIds = cartItems.map(item => item._id)
-    localStorage.setItem("selectedCartItems", JSON.stringify(allItemIds))
 
     // Proceed to payment with internal wallet
     try {

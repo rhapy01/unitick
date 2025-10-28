@@ -9,6 +9,7 @@ import { getSecureWalletForUser } from "@/lib/wallet-secure"
 const UNILABOOK_ABI = parseAbi([
   // Payment functions
   "function createOrder((address vendor, uint256 amount, bool isPaid)[] vendorPayments, string[] serviceNames, uint256[] bookingDates, string metadata) external returns (uint256)",
+  "function createOrderForGift(address[] recipients, (address vendor, uint256 amount, bool isPaid)[] vendorPayments, string[] serviceNames, uint256[] bookingDates, string metadata) external returns (uint256)",
 
   // Query functions
   "function getOrder(uint256 orderId) view returns ((uint256 orderId, address buyer, uint256 totalAmount, uint256 platformFee, uint256 timestamp, bool isPaid, string metadata))",
@@ -40,6 +41,9 @@ const UNILABOOK_ABI = parseAbi([
   "event OrderCreated(uint256 indexed orderId, address indexed buyer, uint256 totalAmount, uint256 platformFee)",
   "event TicketMinted(uint256 indexed tokenId, uint256 indexed orderId, address indexed owner)",
   "event FreeTicketCreated(uint256 indexed tokenId, uint256 indexed orderId, address indexed vendor, string serviceName)",
+  "event GiftOrderCreated(uint256 indexed orderId, address indexed buyer, address indexed recipient, uint256 totalAmount, uint256 platformFee)",
+  "event GiftTicketMinted(uint256 indexed tokenId, uint256 indexed orderId, address indexed recipient, address buyer)",
+  "event FreeGiftTicketCreated(uint256 indexed tokenId, uint256 indexed orderId, address indexed vendor, string serviceName, address recipient, address buyer)",
   "event PlatformFeeUpdated(uint256 newFee)",
   "event PlatformWalletUpdated(address newWallet)",
   "event VendorWhitelisted(address indexed vendor)",
@@ -829,5 +833,324 @@ export async function getWhitelistedVendor(index: bigint): Promise<Address> {
   } catch (error) {
     console.error('[Contract Client] Error getting whitelisted vendor:', error)
     throw error
+  }
+}
+
+// Gift order creation function
+export async function createGiftOrderOnChain(
+  recipients: Address[],
+  vendorPayments: VendorPayment[],
+  serviceNames: string[],
+  bookingDates: bigint[],
+  metadata: string,
+  totalUnitickAmount: bigint,
+  walletClient?: any
+): Promise<{ orderId: bigint; tokenIds: bigint[]; receipt: any }> {
+  let client, account
+
+  if (walletClient) {
+    // Use the provided wallet client (for internal wallets)
+    console.log('[Contract Client] Using provided wallet client for internal wallet (gift order)')
+    client = walletClient
+    account = walletClient.account
+  } else {
+    // Fallback to creating our own client (for external wallets)
+    console.log('[Contract Client] Creating new wallet client for external wallet (gift order)')
+    const result = await getWalletClient()
+    client = result.walletClient
+    account = result.account
+  }
+
+  const contractAddress = getUnilaBookAddress()
+
+  // Simulate first to capture the predicted orderId
+  console.log('[Contract Client] Simulating gift order contract call...')
+  console.log('[Contract Client] Gift order simulation parameters:', {
+    contractAddress,
+    account: account.address,
+    recipients: recipients.map(r => r),
+    vendorPaymentsCount: vendorPayments.length,
+    serviceNamesCount: serviceNames.length,
+    bookingDatesCount: bookingDates.length,
+    vendorPayments: vendorPayments.map(vp => ({ vendor: vp.vendor, amount: vp.amount.toString() })),
+    serviceNames,
+    bookingDates: bookingDates.map(bd => bd.toString()),
+    metadata
+  })
+  
+  const publicClient = getPublicClient()
+  let simulationResult
+  try {
+    simulationResult = await publicClient.simulateContract({
+    address: contractAddress,
+    abi: UNILABOOK_ABI,
+    functionName: "createOrderForGift",
+    args: [recipients, vendorPayments, serviceNames, bookingDates, metadata],
+    account,
+  }) as any
+    
+    console.log('[Contract Client] Gift order simulation successful, predicted order ID:', simulationResult.result)
+  } catch (simulationError) {
+    console.error('[Contract Client] Gift order simulation failed:', simulationError)
+    console.error('[Contract Client] Gift order simulation error details:', {
+      message: simulationError instanceof Error ? simulationError.message : 'Unknown error',
+      cause: simulationError instanceof Error ? simulationError.cause : undefined,
+      stack: simulationError instanceof Error ? simulationError.stack : undefined
+    })
+    
+    // Try to extract more specific error information
+    if (simulationError instanceof Error) {
+      const errorMessage = simulationError.message
+      if (errorMessage.includes('Invalid recipient address')) {
+        throw new Error('Invalid recipient address provided')
+      } else if (errorMessage.includes('Vendor not whitelisted')) {
+        throw new Error('Vendor whitelist validation failed in simulation')
+      } else if (errorMessage.includes('UniTick transfer failed')) {
+        throw new Error('Token transfer failed in simulation - check balance and allowance')
+      } else if (errorMessage.includes('Vendor token transfer failed')) {
+        throw new Error('Vendor payment transfer failed in simulation')
+      } else if (errorMessage.includes('Platform fee token transfer failed')) {
+        throw new Error('Platform fee transfer failed in simulation')
+      } else {
+        throw new Error(`Gift order contract simulation failed: ${errorMessage}`)
+      }
+    }
+    
+    throw new Error(`Gift order contract simulation failed: ${simulationError instanceof Error ? simulationError.message : 'Unknown error'}`)
+  }
+  
+  const { request, result: simulatedOrderId } = simulationResult
+
+  // Send the transaction using the simulated request
+  let hash: Hash
+  if (walletClient && walletClient.account) {
+    // Internal wallet - sign transaction locally and send as raw transaction
+    console.log('[Contract Client] Signing gift order transaction locally with internal wallet')
+    
+    // Get gas price for the transaction
+    const gasPrice = await publicClient.getGasPrice()
+    
+    // Get the correct nonce for the account
+    const nonce = await publicClient.getTransactionCount({
+      address: walletClient.account.address,
+      blockTag: 'pending'
+    })
+    
+    // Estimate gas limit for the transaction
+    console.log('[Contract Client] Estimating gas for gift order transaction...')
+    
+    let gasEstimate
+    try {
+      gasEstimate = await publicClient.estimateContractGas({
+      address: contractAddress,
+      abi: UNILABOOK_ABI,
+      functionName: "createOrderForGift",
+      args: [recipients, vendorPayments, serviceNames, bookingDates, metadata],
+      account: walletClient.account,
+    })
+      console.log('[Contract Client] Gift order gas estimate successful:', gasEstimate.toString())
+    } catch (gasError) {
+      console.error('[Contract Client] Gift order gas estimation failed:', gasError)
+      throw new Error(`Gift order gas estimation failed: ${gasError instanceof Error ? gasError.message : 'Unknown error'}`)
+    }
+    
+    // Create the transaction data manually
+    const transactionData = encodeFunctionData({
+      abi: UNILABOOK_ABI,
+      functionName: 'createOrderForGift',
+      args: [recipients, vendorPayments, serviceNames, bookingDates, metadata]
+    })
+    
+    const signedTx = await walletClient.signTransaction({
+      to: contractAddress,
+      data: transactionData,
+      account: walletClient.account,
+      type: 'legacy',
+      gasPrice: gasPrice,
+      gas: gasEstimate,
+      value: 0n,
+      nonce: nonce,
+    })
+    
+    // Double-check balance and allowance before sending
+    console.log('[Contract Client] Final balance check before sending gift order transaction...')
+    const finalBalance = await getUniTickBalance(walletClient.account.address)
+    const finalAllowance = await getUniTickAllowance(walletClient.account.address, contractAddress)
+    console.log('[Contract Client] Final balance:', finalBalance.toString())
+    console.log('[Contract Client] Final allowance:', finalAllowance.toString())
+    console.log('[Contract Client] Required amount:', totalUnitickAmount.toString())
+    
+    if (finalBalance < totalUnitickAmount) {
+      throw new Error(`Insufficient UniTick balance: ${finalBalance.toString()} < ${totalUnitickAmount.toString()}`)
+    }
+    
+    if (finalAllowance < totalUnitickAmount) {
+      throw new Error(`Insufficient UniTick allowance: ${finalAllowance.toString()} < ${totalUnitickAmount.toString()}`)
+    }
+    
+    console.log('[Contract Client] Sending signed gift order transaction...')
+    hash = await publicClient.sendRawTransaction({ serializedTransaction: signedTx })
+    console.log('[Contract Client] Gift order transaction sent with hash:', hash)
+  } else {
+    // External wallet - use the simulated request
+    console.log('[Contract Client] Sending gift order transaction with external wallet')
+    hash = await client.writeContract(request)
+    console.log('[Contract Client] Gift order transaction sent with hash:', hash)
+  }
+
+  // Wait for transaction confirmation
+  console.log('[Contract Client] Waiting for gift order transaction confirmation...')
+  const receipt = await publicClient.waitForTransactionReceipt({ hash })
+  console.log('[Contract Client] Gift order transaction confirmed:', receipt)
+
+  if (receipt.status !== 'success') {
+    throw new Error('Gift order transaction failed')
+  }
+
+  // Extract token IDs from events
+  const tokenIds: bigint[] = []
+  
+  // Look for GiftTicketMinted and FreeGiftTicketCreated events
+  for (const log of receipt.logs) {
+    try {
+      const decoded = publicClient.decodeEventLog({
+        abi: UNILABOOK_ABI,
+        data: log.data,
+        topics: log.topics,
+      })
+      
+      if (decoded.eventName === 'GiftTicketMinted' || decoded.eventName === 'FreeGiftTicketCreated') {
+        const args = decoded.args as any
+        tokenIds.push(args.tokenId)
+        console.log('[Contract Client] Found gift ticket minted:', args.tokenId.toString(), 'for recipient:', args.recipient)
+      }
+    } catch (e) {
+      // Skip logs that can't be decoded (not our events)
+    }
+  }
+
+  console.log('[Contract Client] Gift order completed successfully:', {
+    orderId: simulatedOrderId.toString(),
+    tokenIds: tokenIds.map(id => id.toString()),
+    recipients: recipients.map(r => r),
+    transactionHash: hash
+  })
+
+  return {
+    orderId: simulatedOrderId,
+    tokenIds,
+    receipt
+  }
+}
+
+// Gift order creation from cart items (similar to createOrderFromCartItems but for gifts)
+export async function createGiftOrderFromCartItems(
+  cartItems: any[],
+  userId: string,
+  userEmail: string
+): Promise<{ success: boolean; transactionHash?: string; blockchainOrderId?: string; error?: string }> {
+  try {
+    console.log('[Contract Client] Creating gift order from cart items...')
+    console.log('[Contract Client] Cart items:', cartItems.length)
+
+    // Validate all cart items have recipient information
+    for (const item of cartItems) {
+      if (!item.recipient_wallet) {
+        throw new Error(`Cart item ${item._id || item.id} is missing recipient wallet address`)
+      }
+    }
+
+    // Get secure wallet for user
+    const secureWallet = await getSecureWalletForUser(userId, userEmail)
+    console.log('[Contract Client] Secure wallet retrieved for user:', userId)
+
+    // Create wallet client
+    const chain = getChain()
+    const walletClient = createWalletClient({
+      chain,
+      transport: http(process.env.NEXT_PUBLIC_RPC_URL || (chain.id === 84532 ? DEFAULT_BASE_SEPOLIA_RPC : chain.rpcUrls.public.http[0])),
+      account: privateKeyToAccount(secureWallet.privateKey as `0x${string}`)
+    })
+
+    // Prepare vendor payments and recipients
+    const vendorPayments: VendorPayment[] = []
+    const serviceNames: string[] = []
+    const bookingDates: bigint[] = []
+    const recipients: Address[] = []
+    let totalAmount = 0n
+
+    for (const item of cartItems) {
+      const amount = BigInt(Math.floor(item.listing.price * item.quantity * 1e18)) // Convert to wei
+      const vendorAddress = item.listing.vendor.wallet_address as Address
+      const recipientAddress = item.recipient_wallet as Address
+      
+      vendorPayments.push({
+        vendor: vendorAddress,
+        amount: amount,
+        isPaid: false
+      })
+      
+      recipients.push(recipientAddress)
+      serviceNames.push(item.listing.title)
+      bookingDates.push(BigInt(Math.floor(new Date(item.booking_date).getTime() / 1000)))
+      totalAmount += amount
+      
+      console.log('[Contract Client] Added vendor payment:', {
+        vendor: vendorAddress,
+        recipient: recipientAddress,
+        amount: amount.toString(),
+        service: item.listing.title
+      })
+    }
+
+    // Calculate platform fee
+    const platformFee = (totalAmount * 50n) / 10000n // 0.5%
+    const totalRequired = totalAmount + platformFee
+
+    console.log('[Contract Client] Gift order totals:', {
+      subtotal: totalAmount.toString(),
+      platformFee: platformFee.toString(),
+      totalRequired: totalRequired.toString()
+    })
+
+    // Create metadata
+    const metadata = JSON.stringify({
+      userId,
+      userEmail,
+      cartItemIds: cartItems.map(item => item._id),
+      isGiftOrder: true,
+      recipients: recipients.map(r => r),
+      timestamp: new Date().toISOString()
+    })
+
+    // Create the gift order on chain
+    const result = await createGiftOrderOnChain(
+      recipients,
+      vendorPayments,
+      serviceNames,
+      bookingDates,
+      metadata,
+      totalRequired,
+      walletClient
+    )
+
+    console.log('[Contract Client] Gift order created successfully:', {
+      orderId: result.orderId.toString(),
+      tokenIds: result.tokenIds.map(id => id.toString()),
+      transactionHash: result.receipt.transactionHash
+    })
+
+    return {
+      success: true,
+      transactionHash: result.receipt.transactionHash,
+      blockchainOrderId: result.orderId.toString()
+    }
+
+  } catch (error) {
+    console.error('[Contract Client] Error creating gift order from cart items:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
   }
 }
