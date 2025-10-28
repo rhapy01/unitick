@@ -157,37 +157,9 @@ export default function ShopPage() {
 
   const loadStats = async () => {
     try {
-      const { data: listingsData } = await supabase
-        .from('listings')
-        .select('id')
-        .eq('is_active', true)
-      
-      const { data: vendorsData } = await supabase
-        .from('vendors')
-        .select('id')
-        .eq('is_verified', true)
-      
-      const { data: bookingsData } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('status', 'confirmed')
-      
-      // Calculate average rating from all vendor reviews
-      const { data: ratingData } = await supabase
-        .from('vendor_reviews')
-        .select('rating')
-        .not('rating', 'is', null)
-      
-      const averageRating = ratingData && ratingData.length > 0 
-        ? ratingData.reduce((sum, review) => sum + review.rating, 0) / ratingData.length
-        : 0
-      
-      setStats({
-        totalListings: listingsData?.length || 0,
-        totalVendors: vendorsData?.length || 0,
-        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal place
-        totalBookings: bookingsData?.length || 0
-      })
+      const res = await fetch('/api/stats', { cache: 'no-store' })
+      const json = await res.json()
+      if (json.success) setStats(json.stats)
     } catch (error) {
       console.error('Error loading stats:', error)
     }
